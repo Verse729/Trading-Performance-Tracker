@@ -1,0 +1,21 @@
+# Python 自動產生的快取檔案
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# 編輯器與 IDE 設定檔 (VS Code)
+.vscode/
+
+# 本地端虛擬環境 (如果未來有在專案內建立 venv)
+venv/
+.venv/
+env/
+
+# 本地端資料庫 (追蹤程式本身即可，不建議把個人交易資料庫推上 Git)
+*.db
+*.sqlite3
+
+# Mac 系統產生的隱藏檔 (預防萬一)
+.DS_Store
