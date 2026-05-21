@@ -58,7 +58,8 @@ metrics = calculate_metrics(df_filtered, df_daily)
 render_dashboard(metrics, df_filtered)
 
 st.subheader("📉 資產權益與風險回撤曲線")
-fig = plot_performance_charts(df_daily, view_mode=chart_mode)
+# 多傳入第一個參數 df_filtered
+fig = plot_performance_charts(df_filtered, df_daily, view_mode=chart_mode)
 st.plotly_chart(fig, width='stretch')
 
 st.markdown("---")
