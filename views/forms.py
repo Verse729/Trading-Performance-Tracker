@@ -27,8 +27,9 @@ def render_trade_forms(db_manager, on_data_changed_callback):
                 b_date = st.date_input("買進日期", date.today())
             with col3:
                 s_date = st.date_input("賣出日期", date.today())
-                ret_pct = st.number_input("結算報酬率 (%)", val=0.0, step=0.1, format="%.2f")
-                pnl_amt = st.number_input("絕對損益金額 (元)", val=0.0, step=100.0, format="%.0f")
+                # 修正處：將 val 修正為 value
+                ret_pct = st.number_input("結算報酬率 (%)", value=0.0, step=0.1, format="%.2f")
+                pnl_amt = st.number_input("絕對損益金額 (元)", value=0.0, step=100.0, format="%.0f")
 
             submit_btn = st.form_submit_button("確認新增")
             
@@ -64,15 +65,16 @@ def render_trade_forms(db_manager, on_data_changed_callback):
             with st.form("update_trade_form"):
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    u_s_name = st.text_input("策略名稱", val=trade_row['strategy_name'])
-                    u_v_name = st.text_input("版本編號", val=trade_row['version'])
+                    u_s_name = st.text_input("策略名稱", value=trade_row['strategy_name'])
+                    u_v_name = st.text_input("版本編號", value=trade_row['version'])
                 with col2:
                     # 將文字字串轉回 date 物件供介面預設顯示
                     u_b_date = st.date_input("買進日期", pd.to_datetime(trade_row['buy_date']).date())
                 with col3:
                     u_s_date = st.date_input("賣出日期", pd.to_datetime(trade_row['sell_date']).date())
-                    u_ret_pct = st.number_input("結算報酬率 (%)", val=float(trade_row['net_return_pct']), step=0.1, format="%.2f")
-                    u_pnl_amt = st.number_input("絕對損益金額 (元)", val=float(trade_row['net_profit_loss']), step=100.0, format="%.0f")
+                    # 修正處：將 val 修正為 value
+                    u_ret_pct = st.number_input("結算報酬率 (%)", value=float(trade_row['net_return_pct']), step=0.1, format="%.2f")
+                    u_pnl_amt = st.number_input("絕對損益金額 (元)", value=float(trade_row['net_profit_loss']), step=100.0, format="%.0f")
 
                 update_btn = st.form_submit_button("確認修改")
                 if update_btn:
@@ -97,7 +99,7 @@ def render_trade_forms(db_manager, on_data_changed_callback):
             del_id = st.selectbox("選擇要刪除的交易編號", df_all['trade_id'].tolist(), key="delete_select")
             st.warning(f"⚠️ 警告：確定要永久刪除交易紀錄 {del_id} 嗎？刪除後將無法還原。")
             
-            del_btn = st.button("🔴 確認永久刪除", use_container_width=True)
+            del_btn = st.button("🔴 確認永久刪除", width='stretch')
             if del_btn:
                 success = db_manager.delete_trade(del_id)
                 if success:
