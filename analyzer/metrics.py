@@ -32,12 +32,15 @@ def calculate_metrics(df_trades: pd.DataFrame, df_daily: pd.DataFrame) -> dict:
     # 這裡除以 100 是為了保持與原本 metrics 輸出格式（小數點）一致
     metrics["avg_monthly_return"] = float(df['trade_daily_return'].mean() / 100.0 * 30)
 
-    # 3. Max Drawdown (維持原樣，利用連續時間序列確保精確度)
-    if not df_daily.empty:
-        nav_series = df_daily['nav']
-        running_max = nav_series.cummax()
-        drawdown = (nav_series - running_max) / running_max
-        metrics["max_drawdown"] = float(drawdown.min())
+    # 3. Max Drawdown (改為統計：所有交易紀錄中「單筆最大虧損報酬率」)
+    # 直接從 df_trades 的結算報酬率欄位找出最小值
+    # 轉換成小數點格式（例如 -4.5% 會存成 -0.045）以符合外層顯示與 Calmar Ratio 的計算
+    if not df_trades.empty:
+        min_trade_return = df_trades['net_return_pct'].min()
+        # 如果所有交易都是賺錢的（最小值 > 0），那最大虧損就是 0.0
+        metrics["max_drawdown"] = float(min_trade_return / 100.0) if min_trade_return < 0 else 0.0
+    else:
+        metrics["max_drawdown"] = 0.0
     
     # 4 & 5. Sharpe 與 Calmar 依此類推...
     annual_return = metrics["avg_monthly_return"] * 12
