@@ -10,7 +10,7 @@ from database.db_manager import DBManager
 from analyzer.time_series import generate_daily_equity_curve
 from analyzer.metrics import calculate_metrics
 from views.dashboard import render_dashboard
-from views.charts import plot_performance_charts
+from views.charts import plot_performance_charts, plot_cumulative_pnl_chart
 from views.forms import render_trade_forms
 
 # 1. 網頁基本配置 (寬螢幕模式、網頁標題)
@@ -41,9 +41,6 @@ else:
 # 側邊欄控制項：多策略切換
 selected_strat = st.sidebar.selectbox("選擇分析策略", strategy_list)
 
-# 側邊欄控制項：圖表呈現模式切換
-chart_mode = st.sidebar.radio("圖表計算視角", ["報酬率 (%)", "絕對金額"])
-
 # 5. 資料分流過濾 (核心痛點：支援分開計算不同策略結果)
 if selected_strat == "全部策略":
     df_filtered = df_all_trades
@@ -57,10 +54,13 @@ metrics = calculate_metrics(df_filtered, df_daily)
 # 7. 主畫面渲染：上半部儀表板與圖表
 render_dashboard(metrics, df_filtered)
 
-st.subheader("📉 資產權益與風險回撤曲線")
-# 多傳入第一個參數 df_filtered
-fig = plot_performance_charts(df_filtered, df_daily, view_mode=chart_mode)
+st.subheader("📉 單筆結算報酬率")
+fig = plot_performance_charts(df_filtered, df_daily)
 st.plotly_chart(fig, width='stretch')
+
+st.subheader("📈 累積絕對損益金額")
+fig2 = plot_cumulative_pnl_chart(df_filtered)
+st.plotly_chart(fig2, width='stretch')
 
 st.markdown("---")
 

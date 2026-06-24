@@ -5,17 +5,21 @@ from config import RISK_FREE_RATE
 def calculate_metrics(df_trades: pd.DataFrame, df_daily: pd.DataFrame) -> dict:
     metrics = {
         "total_trades": 0,
+        "total_pnl": 0.0,
         "avg_monthly_return": 0.0,
         "max_drawdown": 0.0,
         "sharpe_ratio": 0.0,
         "calmar_ratio": 0.0
     }
-    
+
     if df_trades.empty:
         return metrics
 
     # 1. 交易總次數
     metrics["total_trades"] = len(df_trades)
+
+    # 1b. 累積損益金額
+    metrics["total_pnl"] = float(df_trades['net_profit_loss'].sum())
 
     # 2. 平均月報酬 ── 完美採用你的「平均日報酬推算邏輯」！
     df = df_trades.copy()
