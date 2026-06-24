@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Workflow Rules
+
+1. **所有改動必須在新建的 branch 上進行**，禁止直接在 `main` 上 commit。
+2. **絕對禁止執行 `git merge` 與 `git push`**，包含任何形式的 force push。
+
 ## Project Overview
 
 A Streamlit-based trading performance tracker that accepts historical trade records and produces time-weighted equity curves and risk metrics. Supports multi-strategy filtering and interactive CRUD via a SQLite backend.
