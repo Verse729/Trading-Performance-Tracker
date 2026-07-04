@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import sys
+from datetime import datetime
 
 # 確保路徑正確，防止 Conda 環境下的 Import 異常
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -12,6 +13,7 @@ from analyzer.metrics import calculate_metrics
 from views.dashboard import render_dashboard
 from views.charts import plot_performance_charts, plot_cumulative_pnl_chart
 from views.forms import render_trade_forms
+from views.report import generate_html_report
 
 # 1. 網頁基本配置 (寬螢幕模式、網頁標題)
 st.set_page_config(
@@ -61,6 +63,16 @@ st.plotly_chart(fig, width='stretch')
 st.subheader("📈 累積絕對損益金額")
 fig2 = plot_cumulative_pnl_chart(df_filtered)
 st.plotly_chart(fig2, width='stretch')
+
+# 7.5 匯出可離線開啟、適合手機瀏覽的績效報告 (單一 HTML 檔案)
+html_report = generate_html_report(selected_strat, metrics, df_filtered, fig, fig2)
+st.sidebar.markdown("---")
+st.sidebar.download_button(
+    label="📄 匯出策略績效報告 (HTML)",
+    data=html_report,
+    file_name=f"report_{selected_strat}_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+    mime="text/html"
+)
 
 st.markdown("---")
 
