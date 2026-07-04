@@ -1,59 +1,61 @@
 import pandas as pd
 import numpy as np
-from config import RISK_FREE_RATE
+from config import RISK_FREE_RATE, INITIAL_CAPITAL
 
-def calculate_metrics(df_trades: pd.DataFrame, df_daily: pd.DataFrame) -> dict:
+def calculate_metrics(df_trades: pd.DataFrame, df_equity: pd.DataFrame) -> dict:
     metrics = {
         "total_trades": 0,
         "total_pnl": 0.0,
         "avg_monthly_return": 0.0,
+        "avg_trade_return": 0.0,
         "max_drawdown": 0.0,
+        "worst_single_trade_return": 0.0,
         "sharpe_ratio": 0.0,
         "calmar_ratio": 0.0
     }
 
-    if df_trades.empty:
+    if df_trades.empty or df_equity.empty:
         return metrics
 
-    # 1. 交易總次數
+    # 1. 交易總次數 / 累積損益金額
     metrics["total_trades"] = len(df_trades)
-
-    # 1b. 累積損益金額
     metrics["total_pnl"] = float(df_trades['net_profit_loss'].sum())
 
-    # 2. 平均月報酬 ── 完美採用你的「平均日報酬推算邏輯」！
-    df = df_trades.copy()
-    df['buy_date'] = pd.to_datetime(df['buy_date'])
-    df['sell_date'] = pd.to_datetime(df['sell_date'])
-    
-    # 計算每筆交易的持股天數 (避免當沖除以 0，至少為 1)
-    holding_days = (df['sell_date'] - df['buy_date']).dt.days + 1
-    
-    # 計算每筆交易的平均日報酬率
-    df['trade_daily_return'] = df['net_return_pct'] / holding_days
-    
-    # 將所有交易的日報酬率取平均，並放大 30 倍轉換為「月化報酬」
-    # 這裡除以 100 是為了保持與原本 metrics 輸出格式（小數點）一致
-    metrics["avg_monthly_return"] = float(df['trade_daily_return'].mean() / 100.0 * 30)
+    returns = df_equity['return_pct']
 
-    # 3. Max Drawdown (改為統計：所有交易紀錄中「單筆最大虧損報酬率」)
-    # 直接從 df_trades 的結算報酬率欄位找出最小值
-    # 轉換成小數點格式（例如 -4.5% 會存成 -0.045）以符合外層顯示與 Calmar Ratio 的計算
-    if not df_trades.empty:
-        min_trade_return = df_trades['net_return_pct'].min()
-        # 如果所有交易都是賺錢的（最小值 > 0），那最大虧損就是 0.0
-        metrics["max_drawdown"] = float(min_trade_return / 100.0) if min_trade_return < 0 else 0.0
-    else:
-        metrics["max_drawdown"] = 0.0
-    
-    # 4 & 5. Sharpe 與 Calmar 依此類推...
-    annual_return = metrics["avg_monthly_return"] * 12
-    if not df_daily.empty:
-        daily_std = df_daily['daily_return'].std()
-        annual_vol = daily_std * np.sqrt(365) if daily_std > 0 else 0.0
+    # 2. 單次週期期望報酬 (各筆交易報酬率的算術平均)
+    metrics["avg_trade_return"] = float(returns.mean())
+
+    # 3. 單筆最大虧損 % (原本 Max Drawdown 的定義，保留作為輔助指標)
+    min_trade_return = df_trades['net_return_pct'].min()
+    metrics["worst_single_trade_return"] = float(min_trade_return / 100.0) if min_trade_return < 0 else 0.0
+
+    # 4. 年化報酬 (CAGR)：用實際經過的日曆天數換算，避免因跳過交易週期而失真
+    buy_dates = pd.to_datetime(df_trades['buy_date'])
+    sell_dates = pd.to_datetime(df_trades['sell_date'])
+    total_days = max((sell_dates.max() - buy_dates.min()).days, 1)
+
+    final_nav = df_equity['nav'].iloc[-1]
+    total_return = final_nav / INITIAL_CAPITAL - 1.0
+    annual_return = (1.0 + total_return) ** (365.25 / total_days) - 1.0
+
+    # 5. 平均月報酬：由年化報酬複利換算回月報酬 (取代原本「日報酬平均 * 30」的近似值)
+    metrics["avg_monthly_return"] = float((1.0 + annual_return) ** (1.0 / 12.0) - 1.0)
+
+    # 6. 真實 Max Drawdown：權益曲線的峰谷回撤 (peak-to-trough)
+    running_max = df_equity['nav'].cummax()
+    drawdown = (df_equity['nav'] - running_max) / running_max
+    metrics["max_drawdown"] = float(drawdown.min())
+
+    # 7. Sharpe Ratio：以每筆交易報酬序列的樣本標準差，依實際交易頻率年化
+    if len(returns) > 1:
+        periods_per_year = len(returns) / (total_days / 365.25)
+        annual_vol = float(returns.std(ddof=1) * np.sqrt(periods_per_year))
         if annual_vol > 0.0001:
             metrics["sharpe_ratio"] = float((annual_return - RISK_FREE_RATE) / annual_vol)
-        if abs(metrics["max_drawdown"]) > 0:
-            metrics["calmar_ratio"] = float(annual_return / abs(metrics["max_drawdown"]))
+
+    # 8. Calmar Ratio：年化報酬 / 真實最大回撤
+    if abs(metrics["max_drawdown"]) > 0:
+        metrics["calmar_ratio"] = float(annual_return / abs(metrics["max_drawdown"]))
 
     return metrics

@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from config import DB_PATH
 from database.db_manager import DBManager
-from analyzer.time_series import generate_daily_equity_curve
+from analyzer.time_series import generate_trade_equity_curve
 from analyzer.metrics import calculate_metrics
 from views.dashboard import render_dashboard
 from views.charts import plot_performance_charts, plot_cumulative_pnl_chart
@@ -48,14 +48,14 @@ else:
     df_filtered = df_all_trades[df_all_trades['strategy_name'] == selected_strat]
 
 # 6. 核心計算與績效生成
-df_daily = generate_daily_equity_curve(df_filtered)
-metrics = calculate_metrics(df_filtered, df_daily)
+df_equity = generate_trade_equity_curve(df_filtered)
+metrics = calculate_metrics(df_filtered, df_equity)
 
 # 7. 主畫面渲染：上半部儀表板與圖表
 render_dashboard(metrics, df_filtered)
 
 st.subheader("📉 單筆結算報酬率")
-fig = plot_performance_charts(df_filtered, df_daily)
+fig = plot_performance_charts(df_filtered, df_equity)
 st.plotly_chart(fig, width='stretch')
 
 st.subheader("📈 累積絕對損益金額")

@@ -7,8 +7,8 @@ def render_dashboard(metrics: dict, df_trades: pd.DataFrame):
     """
     st.subheader("📊 策略績效儀表板")
 
-    # 1. 橫向排列的 6 大指標卡片
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    # 1. 第一排：交易統計與核心報酬指標
+    col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         st.metric(label="交易總次數", value=f"{metrics['total_trades']} 次")
@@ -20,16 +20,27 @@ def render_dashboard(metrics: dict, df_trades: pd.DataFrame):
 
     with col3:
         avg_m_ret = metrics['avg_monthly_return'] * 100
-        st.metric(label="平均月報酬", value=f"{avg_m_ret:.2f}%")
+        st.metric(label="平均月報酬 (複利年化換算)", value=f"{avg_m_ret:.2f}%")
 
     with col4:
-        max_dd = metrics['max_drawdown'] * 100
-        st.metric(label="Max Drawdown", value=f"{max_dd:.2f}%")
+        avg_trade_ret = metrics['avg_trade_return'] * 100
+        st.metric(label="單次週期平均報酬", value=f"{avg_trade_ret:.2f}%")
+
+    # 2. 第二排：風險指標
+    col5, col6, col7, col8 = st.columns(4)
 
     with col5:
-        st.metric(label="Sharpe Ratio (夏普值)", value=f"{metrics['sharpe_ratio']:.2f}")
+        max_dd = metrics['max_drawdown'] * 100
+        st.metric(label="Max Drawdown (權益曲線峰谷回撤)", value=f"{max_dd:.2f}%")
 
     with col6:
+        worst_trade = metrics['worst_single_trade_return'] * 100
+        st.metric(label="單筆最大虧損", value=f"{worst_trade:.2f}%")
+
+    with col7:
+        st.metric(label="Sharpe Ratio (夏普值)", value=f"{metrics['sharpe_ratio']:.2f}")
+
+    with col8:
         st.metric(label="Calmar Ratio (卡瑪比率)", value=f"{metrics['calmar_ratio']:.2f}")
 
     st.markdown("---")
