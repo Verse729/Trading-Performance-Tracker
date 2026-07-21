@@ -7,8 +7,56 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div id="app-root">
-  <p style="padding:24px;">頁面建置中...（將於 Task 9 完成組裝）</p>
+<div class="app-layout">
+  <aside class="sidebar">
+    <h2>⚙️ 控制面板與篩選</h2>
+    <label for="strategy-select">選擇分析策略</label>
+    <select id="strategy-select"></select>
+
+    <hr class="sidebar-divider">
+    <button id="btn-choose-backup" class="btn btn-block">🔒 設定自動備份檔案</button>
+    <div style="height:8px;"></div>
+    <button id="btn-export-json" class="btn btn-block">💾 手動匯出 JSON</button>
+    <div style="height:8px;"></div>
+    <label for="file-import-json">📂 匯入 JSON 備份</label>
+    <input type="file" id="file-import-json" accept=".json">
+
+    <hr class="sidebar-divider">
+    <button id="btn-export-report" class="btn btn-block">📄 匯出策略績效報告 (HTML)</button>
+  </aside>
+
+  <main class="main-content">
+    <h1 class="page-title">📈 交易績效追蹤與多策略分析系統</h1>
+    <p class="page-subtitle">輸入你的歷史交易明細，自動產出精準時間加權的累計權益曲線與核心風險指標。</p>
+
+    <div class="section-title">📊 策略績效儀表板</div>
+    <div id="metric-cards" class="metric-grid"></div>
+
+    <div class="section-title">📉 單筆結算報酬率</div>
+    <div class="chart-block"><div id="returns-chart" style="width:100%;"></div></div>
+
+    <div class="section-title">📈 累積絕對損益金額</div>
+    <div class="chart-block"><div id="cum-pnl-chart" style="width:100%;"></div></div>
+
+    <div class="section-title">📋 交易明細紀錄</div>
+    <div id="trade-table"></div>
+
+    <div class="section-title">🛠️ 資料庫數據維護</div>
+    <div id="forms-container"></div>
+  </main>
 </div>
+
+<script src="lib/plotly.min.js"></script>
+<script src="lib/plotly-source.js"></script>
+<script src="js/config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/backup.js"></script>
+<script src="js/timeSeries.js"></script>
+<script src="js/metrics.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/forms.js"></script>
+<script src="js/report.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
