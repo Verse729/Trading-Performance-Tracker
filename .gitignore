@@ -19,3 +19,6 @@ env/
 
 # Mac 系統產生的隱藏檔 (預防萬一)
 .DS_Store
+
+# Subagent-driven-development 執行期暫存（進度追蹤、任務簡報）
+.superpowers/
