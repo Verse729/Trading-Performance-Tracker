@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><title>儀表板測試</title>
+<link rel="stylesheet" href="../css/style.css"></head>
+<body>
+<h1>儀表板元件測試</h1>
+<div id="assert-results"></div>
+<h2>指標卡</h2>
+<div id="cards" class="metric-grid"></div>
+<h2>交易明細表格</h2>
+<div id="table"></div>
+
+<script src="../js/config.js"></script>
+<script src="../js/timeSeries.js"></script>
+<script src="../js/metrics.js"></script>
+<script src="../lib/plotly.min.js"></script>
+<script src="../js/charts.js"></script>
+<script src="../js/dashboard.js"></script>
+<script>
+const fixtureTrades = [
+  { trade_id: 'T001', strategy_name: 'StratA', version: 'v1.0', buy_date: '2026-01-12', sell_date: '2026-01-20', net_return_pct: 6.0, net_profit_loss: 60000.0 },
+  { trade_id: 'T002', strategy_name: 'StratA', version: 'v1.0', buy_date: '2026-02-11', sell_date: '2026-03-10', net_return_pct: -2.0, net_profit_loss: -20000.0 },
+  { trade_id: 'T003', strategy_name: 'StratA', version: 'v1.0', buy_date: '2026-03-11', sell_date: '2026-03-25', net_return_pct: 3.0, net_profit_loss: 30000.0 }
+];
+const equity = TPT.timeSeries.generateTradeEquityCurve(fixtureTrades);
+const metrics = TPT.metrics.calculateMetrics(fixtureTrades, equity);
+
+const results = [];
+function record(name, pass) { results.push({ name, pass }); }
+
+const cardsEl = document.getElementById('cards');
+TPT.dashboard.renderMetricCards(metrics, cardsEl);
+record('渲染出 8 張指標卡', cardsEl.querySelectorAll('.metric-card').length === 8);
+
+const tableEl = document.getElementById('table');
+TPT.dashboard.renderTradeTable(fixtureTrades, tableEl);
+record('表格初始渲染 3 列', tableEl.querySelectorAll('tbody tr').length === 3);
+
+const searchInput = tableEl.querySelector('#table-search');
+searchInput.value = 'T002';
+searchInput.dispatchEvent(new Event('input'));
+record('搜尋 T002 後只剩 1 列', tableEl.querySelectorAll('tbody tr').length === 1);
+
+searchInput.value = '';
+searchInput.dispatchEvent(new Event('input'));
+const sortHeader = tableEl.querySelector('thead th[data-key="net_return_pct"]');
+sortHeader.click();
+record('點擊結算報酬率欄位排序後仍是 3 列', tableEl.querySelectorAll('tbody tr').length === 3);
+
+const resultsEl = document.getElementById('assert-results');
+let allPass = true;
+results.forEach(r => {
+  if (!r.pass) allPass = false;
+  const line = document.createElement('div');
+  line.style.color = r.pass ? 'green' : 'red';
+  line.textContent = `[${r.pass ? 'PASS' : 'FAIL'}] ${r.name}`;
+  resultsEl.appendChild(line);
+});
+const summary = document.createElement('h3');
+summary.textContent = allPass
+  ? '全部通過 ✅（請再肉眼確認上方卡片與表格樣式、排序、搜尋皆正常）'
+  : '有測試失敗 ❌';
+summary.style.color = allPass ? 'green' : 'red';
+resultsEl.prepend(summary);
+</script>
+</body>
+</html>
