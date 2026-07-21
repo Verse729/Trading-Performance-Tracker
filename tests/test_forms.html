@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><title>表單驗證測試</title></head>
+<body>
+<h1>表單驗證邏輯測試</h1>
+<p>互動式 UI（分頁切換、送出表單、下拉選單連動）將於 Task 9 的完整端對端手動測試中驗證。此頁僅測試純驗證函式。</p>
+<div id="results"></div>
+<script src="../js/forms.js"></script>
+<script>
+const results = [];
+function record(name, pass) { results.push({ name, pass }); }
+
+let r = TPT.forms.validateNewTrade({ trade_id: '', strategy_name: 'A', buy_date: '2026-01-01', sell_date: '2026-01-02' });
+record('空交易編號應驗證失敗', r.valid === false && r.error.includes('不能為空'));
+
+r = TPT.forms.validateNewTrade({ trade_id: 'T001', strategy_name: 'A', buy_date: '2026-01-05', sell_date: '2026-01-01' });
+record('賣出日期早於買進日期應驗證失敗', r.valid === false && r.error.includes('賣出日期'));
+
+r = TPT.forms.validateNewTrade({ trade_id: 'T001', strategy_name: 'A', buy_date: '2026-01-01', sell_date: '2026-01-05' });
+record('正常輸入應驗證通過', r.valid === true);
+
+r = TPT.forms.validateDatesOnly('2026-01-05', '2026-01-01');
+record('validateDatesOnly 偵測日期顛倒', r.valid === false);
+
+const resultsEl = document.getElementById('results');
+let allPass = true;
+results.forEach(row => {
+  if (!row.pass) allPass = false;
+  const line = document.createElement('div');
+  line.style.color = row.pass ? 'green' : 'red';
+  line.textContent = `[${row.pass ? 'PASS' : 'FAIL'}] ${row.name}`;
+  resultsEl.appendChild(line);
+});
+const summary = document.createElement('h2');
+summary.textContent = allPass ? '全部通過 ✅' : '有測試失敗 ❌';
+summary.style.color = allPass ? 'green' : 'red';
+resultsEl.prepend(summary);
+</script>
+</body>
+</html>
