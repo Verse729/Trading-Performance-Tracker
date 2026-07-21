@@ -1,24 +1,15 @@
-# Python 自動產生的快取檔案
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
+# 瀏覽器/系統產生的暫存檔案
+.DS_Store
+
+# 本機交易資料庫（僅作為一次性遷移來源，已被純網頁版 IndexedDB 取代）
+*.db
+*.sqlite3
 
 # 編輯器與 IDE 設定檔 (VS Code)
 .vscode/
 
-# 本地端虛擬環境 (如果未來有在專案內建立 venv)
-venv/
-.venv/
-env/
-
-# 本地端資料庫 (追蹤程式本身即可，不建議把個人交易資料庫推上 Git)
-*.db
-*.sqlite3
-
-# Mac 系統產生的隱藏檔 (預防萬一)
-.DS_Store
+# 一次性資料遷移輸出（含真實交易資料，不進版控）
+trades_export.json
 
 # Subagent-driven-development 執行期暫存（進度追蹤、任務簡報）
 .superpowers/
