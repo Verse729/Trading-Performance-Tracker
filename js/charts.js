@@ -7,10 +7,10 @@ TPT.chartTokens = {
   INK_MUTED: '#898781',
   GRID: '#e1e0d9',
   BASELINE: '#c3c2b7',
-  GOOD: '#0ca30c',
-  CRITICAL: '#d03b3b',
-  GOOD_FILL: 'rgba(12, 163, 12, 0.10)',
-  CRITICAL_FILL: 'rgba(208, 59, 59, 0.10)',
+  GOOD: '#d03b3b',
+  CRITICAL: '#0ca30c',
+  GOOD_FILL: 'rgba(208, 59, 59, 0.10)',
+  CRITICAL_FILL: 'rgba(12, 163, 12, 0.10)',
   FONT_FAMILY: "system-ui, -apple-system, 'Segoe UI', sans-serif"
 };
 
