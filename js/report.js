@@ -37,12 +37,12 @@ TPT.report = (function () {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>策略績效報告 - ${strategyName}</title>
+<title>策略績效報告 - ${TPT.utils.escapeHtml(strategyName)}</title>
 <style>${buildReportStyles()}</style>
 </head>
 <body>
   <div class="report-header">
-    <h1>📈 ${strategyName} · 策略績效報告</h1>
+    <h1>📈 ${TPT.utils.escapeHtml(strategyName)} · 策略績效報告</h1>
     <div class="subtitle">產生時間：${generatedAt}</div>
   </div>
   <div class="section-title">績效儀表板</div>

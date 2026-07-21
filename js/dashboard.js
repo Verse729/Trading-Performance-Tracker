@@ -71,7 +71,7 @@ TPT.dashboard = (function () {
       const color = value >= 0 ? T.GOOD : T.CRITICAL;
       return `<span style="color:${color};">${formatSignedInt(value)}</span>`;
     }
-    return value;
+    return TPT.utils.escapeHtml(value);
   }
 
   function buildStaticTableHtml(trades) {

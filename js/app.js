@@ -81,7 +81,7 @@ TPT.app = (function () {
     const uniqueStrategies = [...new Set(trades.map(t => t.strategy_name))].sort();
     const strategies = [ALL_STRATEGIES, ...uniqueStrategies];
     const previous = currentStrategy;
-    select.innerHTML = strategies.map(s => `<option value="${s}">${s}</option>`).join('');
+    select.innerHTML = strategies.map(s => `<option value="${TPT.utils.escapeHtml(s)}">${TPT.utils.escapeHtml(s)}</option>`).join('');
     if (strategies.includes(previous)) {
       select.value = previous;
       currentStrategy = previous;

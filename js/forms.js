@@ -83,11 +83,11 @@ TPT.forms = (function () {
       }
       try {
         await callbacks.addTrade({ ...input, trade_id: input.trade_id.trim(), strategy_name: input.strategy_name.trim() });
-        showAlert(addAlert, 'success', `🎉 交易 ${input.trade_id} 新增成功！`);
+        showAlert(addAlert, 'success', `🎉 交易 ${TPT.utils.escapeHtml(input.trade_id)} 新增成功！`);
         addForm.reset();
         await callbacks.onChange();
       } catch (err) {
-        showAlert(addAlert, 'error', `❌ 新增失敗，可能交易編號 ${input.trade_id} 已存在。`);
+        showAlert(addAlert, 'error', `❌ 新增失敗，可能交易編號 ${TPT.utils.escapeHtml(input.trade_id)} 已存在。`);
       }
     });
 
@@ -105,7 +105,7 @@ TPT.forms = (function () {
     }
     body.innerHTML = `
       <div class="form-field" style="max-width:300px;"><label>選擇要修改的交易編號</label>
-        <select id="update-select">${trades.map(t => `<option value="${t.trade_id}">${t.trade_id}</option>`).join('')}</select>
+        <select id="update-select">${trades.map(t => `<option value="${TPT.utils.escapeHtml(t.trade_id)}">${TPT.utils.escapeHtml(t.trade_id)}</option>`).join('')}</select>
       </div>
       <form id="update-form">
         <div class="form-grid">
@@ -153,7 +153,7 @@ TPT.forms = (function () {
           net_return_pct: parseFloat(fd.get('net_return_pct')) || 0,
           net_profit_loss: parseFloat(fd.get('net_profit_loss')) || 0
         });
-        showAlert(alertEl, 'success', `📝 交易 ${tradeId} 修改成功！`);
+        showAlert(alertEl, 'success', `📝 交易 ${TPT.utils.escapeHtml(tradeId)} 修改成功！`);
         await callbacks.onChange();
       } catch (err) {
         showAlert(alertEl, 'error', '❌ 修改失敗。');
@@ -171,7 +171,7 @@ TPT.forms = (function () {
     }
     body.innerHTML = `
       <div class="form-field" style="max-width:300px;"><label>選擇要刪除的交易編號</label>
-        <select id="delete-select">${trades.map(t => `<option value="${t.trade_id}">${t.trade_id}</option>`).join('')}</select>
+        <select id="delete-select">${trades.map(t => `<option value="${TPT.utils.escapeHtml(t.trade_id)}">${TPT.utils.escapeHtml(t.trade_id)}</option>`).join('')}</select>
       </div>
       <div class="alert alert-warning" id="delete-warning"></div>
       <button class="btn btn-danger btn-block" id="delete-confirm">🔴 確認永久刪除</button>`;
@@ -188,7 +188,7 @@ TPT.forms = (function () {
       const tradeId = select.value;
       try {
         await callbacks.deleteTrade(tradeId);
-        showAlert(alertEl, 'success', `🗑️ 交易 ${tradeId} 已成功移除！`);
+        showAlert(alertEl, 'success', `🗑️ 交易 ${TPT.utils.escapeHtml(tradeId)} 已成功移除！`);
         await callbacks.onChange();
       } catch (err) {
         showAlert(alertEl, 'error', '❌ 刪除失敗。');
