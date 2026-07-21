@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><title>核心邏輯測試</title></head>
+<body>
+<h1>核心計算邏輯測試</h1>
+<div id="results"></div>
+<script src="../js/config.js"></script>
+<script src="../js/timeSeries.js"></script>
+<script src="../js/metrics.js"></script>
+<script>
+const results = [];
+function assertClose(name, actual, expected, tolerance) {
+  tolerance = tolerance === undefined ? 1e-6 : tolerance;
+  const pass = Math.abs(actual - expected) < tolerance;
+  results.push({ name, pass, actual, expected });
+}
+function assertEqual(name, actual, expected) {
+  results.push({ name, pass: actual === expected, actual, expected });
+}
+
+const mockTrades = [
+  { trade_id: 'T001', strategy_name: 'StratA', version: 'v1.0', buy_date: '2026-01-12', sell_date: '2026-01-20', net_return_pct: 6.0, net_profit_loss: 60000.0 },
+  { trade_id: 'T002', strategy_name: 'StratA', version: 'v1.0', buy_date: '2026-02-11', sell_date: '2026-03-10', net_return_pct: -2.0, net_profit_loss: -20000.0 },
+  { trade_id: 'T003', strategy_name: 'StratA', version: 'v1.0', buy_date: '2026-03-11', sell_date: '2026-03-25', net_return_pct: 3.0, net_profit_loss: 30000.0 }
+];
+
+const equity = TPT.timeSeries.generateTradeEquityCurve(mockTrades);
+assertEqual('equity curve length', equity.length, 3);
+assertClose('T001 nav', equity[0].nav, 1060000.0, 0.01);
+assertClose('T002 nav', equity[1].nav, 1038800.0, 0.01);
+assertClose('T003 nav', equity[2].nav, 1069964.0, 0.01);
+assertClose('T003 cum_return', equity[2].cum_return, 0.06996399999999992, 1e-6);
+
+const metrics = TPT.metrics.calculateMetrics(mockTrades, equity);
+assertEqual('total_trades', metrics.total_trades, 3);
+assertClose('total_pnl', metrics.total_pnl, 70000.0, 0.01);
+assertClose('avg_trade_return', metrics.avg_trade_return, 0.02333333333333333, 1e-9);
+assertClose('worst_single_trade_return', metrics.worst_single_trade_return, -0.02, 1e-9);
+assertClose('max_drawdown', metrics.max_drawdown, -0.02, 1e-9);
+assertClose('avg_monthly_return', metrics.avg_monthly_return, 0.029000559332193143, 1e-9);
+assertClose('sharpe_ratio', metrics.sharpe_ratio, 2.4688751812902856, 1e-6);
+assertClose('calmar_ratio', metrics.calmar_ratio, 20.4623842348609, 1e-4);
+
+const emptyEquity = TPT.timeSeries.generateTradeEquityCurve([]);
+assertEqual('empty equity curve length', emptyEquity.length, 0);
+const emptyMetrics = TPT.metrics.calculateMetrics([], []);
+assertEqual('empty metrics total_trades', emptyMetrics.total_trades, 0);
+
+const resultsEl = document.getElementById('results');
+let allPass = true;
+results.forEach(r => {
+  if (!r.pass) allPass = false;
+  const line = document.createElement('div');
+  line.style.color = r.pass ? 'green' : 'red';
+  line.textContent = `[${r.pass ? 'PASS' : 'FAIL'}] ${r.name} (actual=${r.actual}, expected=${r.expected})`;
+  resultsEl.appendChild(line);
+});
+const summary = document.createElement('h2');
+summary.textContent = allPass ? '全部通過 ✅' : '有測試失敗 ❌';
+summary.style.color = allPass ? 'green' : 'red';
+resultsEl.prepend(summary);
+</script>
+</body>
+</html>
