@@ -95,3 +95,10 @@ table.trade-table tbody td { padding: 7px 10px; border-bottom: 1px solid var(--g
 .alert-error { background: var(--critical-fill); color: var(--critical); border: 1px solid var(--critical); }
 .alert-success { background: var(--good-fill); color: var(--good); border: 1px solid var(--good); }
 .alert-warning { background: #fdf3e0; color: #9a6b00; border: 1px solid #e8c27a; }
+
+.metric-sub { font-size: 0.7rem; color: var(--ink-muted); margin-top: 4px; }
+.metric-grid-detail { grid-template-columns: repeat(2, 1fr); margin-top: 10px; }
+@media (min-width: 900px) { .metric-grid-detail { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1300px) { .metric-grid-detail { grid-template-columns: repeat(8, 1fr); } }
+.metric-card-small .metric-value { font-size: 0.95rem; }
+.capital-missing { color: #9a6b00; background: #fdf3e0; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem; }
