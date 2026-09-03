@@ -16,6 +16,11 @@ TPT.report = (function () {
     .metric-card { background:#ffffff; border:1px solid ${T.GRID}; border-radius:10px; padding:12px 14px; }
     .metric-label { font-size:0.72rem; color:${T.INK_MUTED}; margin-bottom:6px; }
     .metric-value { font-size:1.15rem; font-weight:700; }
+    .metric-sub { font-size:0.7rem; color:${T.INK_MUTED}; margin-top:4px; }
+    .metric-grid-detail { grid-template-columns:repeat(2,1fr); margin-top:10px; }
+    @media (min-width:900px) { .metric-grid-detail { grid-template-columns:repeat(4,1fr); } }
+    .metric-card-small .metric-value { font-size:0.95rem; }
+    .capital-missing { color:#9a6b00; background:#fdf3e0; padding:1px 6px; border-radius:4px; font-size:0.75rem; }
     .chart-block { background:#ffffff; border:1px solid ${T.GRID}; border-radius:10px; padding:8px; margin-bottom:16px; overflow-x:auto; }
     .table-scroll { overflow-x:auto; border:1px solid ${T.GRID}; border-radius:10px; max-height:480px; overflow-y:auto; }
     table.trade-table { width:100%; border-collapse:collapse; font-size:0.8rem; white-space:nowrap; }
@@ -26,11 +31,14 @@ TPT.report = (function () {
     `;
   }
 
-  function buildReportHtml(strategyName, metrics, trades, returnsFig, cumPnlFig) {
+  function buildReportHtml({ strategyName, metrics, trades, strategyRows, figs }) {
     const generatedAt = new Date().toLocaleString('zh-TW', { hour12: false });
-    const metricCardsHtml = TPT.dashboard.buildMetricCardsHtml(metrics);
-    const tableHtml = TPT.dashboard.buildStaticTableHtml(trades);
+    const D = TPT.dashboard;
     const plotlySource = window.TPT_PLOTLY_SOURCE || '';
+    const strategySection = strategyRows && strategyRows.length
+      ? `<div class="section-title">策略比較</div>${D.buildStrategyTableHtml(strategyRows)}`
+      : '';
+    const plot = (id, fig) => `Plotly.newPlot('${id}', ${JSON.stringify(fig.data)}, ${JSON.stringify(fig.layout)}, {responsive: true, displaylogo: false});`;
 
     return `<!doctype html>
 <html lang="zh-Hant">
@@ -45,19 +53,24 @@ TPT.report = (function () {
     <h1>📈 ${TPT.utils.escapeHtml(strategyName)} · 策略績效報告</h1>
     <div class="subtitle">產生時間：${generatedAt}</div>
   </div>
-  <div class="section-title">績效儀表板</div>
-  <div class="metric-grid">${metricCardsHtml}</div>
-  <div class="section-title">單筆結算報酬率</div>
+  <div class="section-title">總結</div>
+  <div class="metric-grid">${D.buildSummaryCardsHtml(metrics)}</div>
+  <div class="metric-grid metric-grid-detail">${D.buildDetailCardsHtml(metrics)}</div>
+  <div class="section-title">累積報酬率</div>
   <div class="chart-block"><div id="report-chart-1" style="width:100%;"></div></div>
-  <div class="section-title">累積絕對損益金額</div>
+  <div class="section-title">每期報酬率</div>
   <div class="chart-block"><div id="report-chart-2" style="width:100%;"></div></div>
+  <div class="section-title">回撤</div>
+  <div class="chart-block"><div id="report-chart-3" style="width:100%;"></div></div>
+  ${strategySection}
   <div class="section-title">交易明細紀錄</div>
-  ${tableHtml}
+  ${D.buildStaticTableHtml(trades)}
   <div class="report-footer">交易績效追蹤與多策略分析系統 · 本報告可離線開啟</div>
   <script>${plotlySource}</script>
   <script>
-    Plotly.newPlot('report-chart-1', ${JSON.stringify(returnsFig.data)}, ${JSON.stringify(returnsFig.layout)}, {responsive: true, displaylogo: false});
-    Plotly.newPlot('report-chart-2', ${JSON.stringify(cumPnlFig.data)}, ${JSON.stringify(cumPnlFig.layout)}, {responsive: true, displaylogo: false});
+    ${plot('report-chart-1', figs.cumReturn)}
+    ${plot('report-chart-2', figs.periodReturns)}
+    ${plot('report-chart-3', figs.drawdown)}
   </script>
 </body>
 </html>`;

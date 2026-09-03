@@ -102,3 +102,4 @@ table.trade-table tbody td { padding: 7px 10px; border-bottom: 1px solid var(--g
 @media (min-width: 1300px) { .metric-grid-detail { grid-template-columns: repeat(8, 1fr); } }
 .metric-card-small .metric-value { font-size: 0.95rem; }
 .capital-missing { color: #9a6b00; background: #fdf3e0; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem; }
+.notice { font-size: 0.85rem; color: #9a6b00; background: #fdf3e0; border: 1px solid #e8c27a; border-radius: 6px; padding: 8px 12px; margin: 10px 0 0 0; }

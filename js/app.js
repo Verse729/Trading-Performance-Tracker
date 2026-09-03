@@ -51,14 +51,40 @@ TPT.app = (function () {
     }
   }
 
+  function filterByStrategy(trades, strategy) {
+    if (strategy === ALL_STRATEGIES) return trades;
+    return trades.filter(t => t.strategy_name === strategy);
+  }
+
+  // 純函式：由全部交易與選定策略算出這一頁需要的所有東西
+  function buildView(allTrades, strategy) {
+    const filtered = filterByStrategy(allTrades, strategy);
+    const series = TPT.timeSeries.buildPeriodSeries(filtered);
+    const metrics = TPT.metrics.calculateMetrics(series);
+
+    let seriesList, strategyRows;
+    if (strategy === ALL_STRATEGIES) {
+      const names = [...new Set(filtered.map(t => t.strategy_name))].sort();
+      const perStrategy = names.map(name => ({ name, series: TPT.timeSeries.buildPeriodSeries(filterByStrategy(filtered, name)) }));
+      seriesList = perStrategy.map(s => ({ name: s.name, points: s.series.points })).concat([{ name: ALL_STRATEGIES, points: series.points, emphasis: true }]);
+      strategyRows = perStrategy.map(s => ({ name: s.name, metrics: TPT.metrics.calculateMetrics(s.series) }));
+    } else {
+      seriesList = [{ name: strategy, points: series.points }];
+      strategyRows = [];
+    }
+
+    const figs = {
+      cumReturn: TPT.charts.buildCumReturnChart(seriesList),
+      periodReturns: TPT.charts.buildPeriodReturnsChart(seriesList.filter(s => !s.emphasis)),
+      drawdown: TPT.charts.buildDrawdownChart(series.points)
+    };
+    return { filtered, metrics, strategyRows, figs };
+  }
+
   async function onExportReport() {
     const allTrades = await TPT.db.getAllTrades();
-    const filtered = filterByStrategy(allTrades, currentStrategy);
-    const equity = TPT.timeSeries.generateTradeEquityCurve(filtered);
-    const metrics = TPT.metrics.calculateMetrics(filtered, equity);
-    const returnsFig = TPT.charts.buildReturnsChart(filtered);
-    const cumFig = TPT.charts.buildCumPnlChart(filtered);
-    const html = TPT.report.buildReportHtml(currentStrategy, metrics, filtered, returnsFig, cumFig);
+    const view = buildView(allTrades, currentStrategy);
+    const html = TPT.report.buildReportHtml({ strategyName: currentStrategy, ...view, trades: view.filtered });
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -69,11 +95,6 @@ TPT.app = (function () {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }
-
-  function filterByStrategy(trades, strategy) {
-    if (strategy === ALL_STRATEGIES) return trades;
-    return trades.filter(t => t.strategy_name === strategy);
   }
 
   function populateStrategySelect(trades) {
@@ -94,19 +115,23 @@ TPT.app = (function () {
   async function refresh() {
     const allTrades = await TPT.db.getAllTrades();
     populateStrategySelect(allTrades);
-    const filtered = filterByStrategy(allTrades, currentStrategy);
+    const view = buildView(allTrades, currentStrategy);
+    const plotOpts = { responsive: true, displaylogo: false };
 
-    const equity = TPT.timeSeries.generateTradeEquityCurve(filtered);
-    const metrics = TPT.metrics.calculateMetrics(filtered, equity);
+    TPT.dashboard.renderSummaryCards(view.metrics, document.getElementById('summary-cards'));
+    TPT.dashboard.renderDetailCards(view.metrics, document.getElementById('detail-cards'));
+    const notice = document.getElementById('capital-notice');
+    notice.textContent = view.metrics.unfilled_count > 0 ? `⚠️ 有 ${view.metrics.unfilled_count} 筆交易資金未填且報酬率為 0，已從合併報酬中排除。` : '';
+    notice.hidden = view.metrics.unfilled_count === 0;
 
-    TPT.dashboard.renderMetricCards(metrics, document.getElementById('metric-cards'));
-    TPT.dashboard.renderTradeTable(filtered, document.getElementById('trade-table'));
+    Plotly.newPlot('cum-return-chart', view.figs.cumReturn.data, view.figs.cumReturn.layout, plotOpts);
+    Plotly.newPlot('period-returns-chart', view.figs.periodReturns.data, view.figs.periodReturns.layout, plotOpts);
+    Plotly.newPlot('drawdown-chart', view.figs.drawdown.data, view.figs.drawdown.layout, plotOpts);
 
-    const returnsFig = TPT.charts.buildReturnsChart(filtered);
-    Plotly.newPlot('returns-chart', returnsFig.data, returnsFig.layout, { responsive: true, displaylogo: false });
-
-    const cumFig = TPT.charts.buildCumPnlChart(filtered);
-    Plotly.newPlot('cum-pnl-chart', cumFig.data, cumFig.layout, { responsive: true, displaylogo: false });
+    const strategySection = document.getElementById('strategy-section');
+    strategySection.hidden = view.strategyRows.length === 0;
+    TPT.dashboard.renderStrategyTable(view.strategyRows, document.getElementById('strategy-table'));
+    TPT.dashboard.renderTradeTable(view.filtered, document.getElementById('trade-table'));
 
     TPT.forms.render(document.getElementById('forms-container'), {
       getAllTrades: TPT.db.getAllTrades,
@@ -129,9 +154,9 @@ TPT.app = (function () {
     };
   }
 
-  return { init };
+  return { init, buildView };
 })();
 
-window.addEventListener('DOMContentLoaded', () => {
-  TPT.app.init();
-});
+if (typeof document !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', () => { TPT.app.init(); });
+}
