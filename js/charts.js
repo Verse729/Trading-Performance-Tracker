@@ -11,177 +11,90 @@ TPT.chartTokens = {
   CRITICAL: '#0ca30c',
   GOOD_FILL: 'rgba(208, 59, 59, 0.10)',
   CRITICAL_FILL: 'rgba(12, 163, 12, 0.10)',
+  SERIES: ['#2f6fdd', '#e08a1e', '#7b4fc2', '#1a9e8f', '#c2437b', '#6b7280'],
   FONT_FAMILY: "system-ui, -apple-system, 'Segoe UI', sans-serif"
 };
 
 TPT.charts = (function () {
   const T = TPT.chartTokens;
+  const EMPTY = { data: [], layout: { title: '暫無數據' } };
   const LEGEND_STYLE = { orientation: 'h', yanchor: 'bottom', y: 1.02, xanchor: 'right', x: 1, bgcolor: 'rgba(0,0,0,0)', bordercolor: 'rgba(0,0,0,0)' };
   const HOVERLABEL_STYLE = { bgcolor: T.SURFACE, bordercolor: T.GRID, font: { family: T.FONT_FAMILY, size: 12, color: T.INK_PRIMARY } };
+  const AXIS = { showgrid: true, gridcolor: T.GRID, linecolor: T.BASELINE, mirror: true, zeroline: false };
 
-  function buildStemSegments(xVals, yVals, mask) {
-    const xs = [], ys = [];
-    for (let i = 0; i < xVals.length; i++) {
-      if (mask[i]) {
-        xs.push(xVals[i], xVals[i], null);
-        ys.push(0, yVals[i], null);
-      }
-    }
-    return { xs, ys };
-  }
-
-  function splitAtZero(xVals, yVals) {
-    const segments = [];
-    let curX = [xVals[0]], curY = [yVals[0]];
-    let curSign = yVals[0] >= 0;
-    for (let i = 1; i < xVals.length; i++) {
-      const x0 = xVals[i - 1], y0 = yVals[i - 1];
-      const x1 = xVals[i], y1 = yVals[i];
-      const sign1 = y1 >= 0;
-      if (sign1 !== curSign && y1 !== y0) {
-        const frac = (0 - y0) / (y1 - y0);
-        const crossX = new Date(x0.getTime() + frac * (x1.getTime() - x0.getTime()));
-        curX.push(crossX); curY.push(0.0);
-        segments.push({ x: curX, y: curY, sign: curSign });
-        curX = [crossX]; curY = [0.0];
-        curSign = sign1;
-      }
-      curX.push(x1); curY.push(y1);
-    }
-    segments.push({ x: curX, y: curY, sign: curSign });
-    return segments;
-  }
-
-  function buildReturnsChart(trades) {
-    if (!trades || trades.length === 0) {
-      return { data: [], layout: { title: '暫無交易數據可繪製圖表' } };
-    }
-    const xVals = trades.map(t => new Date(t.sell_date));
-    const yData = trades.map(t => t.net_return_pct);
-    const gainMask = yData.map(v => v >= 0);
-    const lossMask = gainMask.map(v => !v);
-
-    const gainSeg = buildStemSegments(xVals, yData, gainMask);
-    const lossSeg = buildStemSegments(xVals, yData, lossMask);
-    const markerColors = yData.map(v => v >= 0 ? T.GOOD : T.CRITICAL);
-
-    let maxIdx = 0, minIdx = 0;
-    yData.forEach((v, i) => {
-      if (v > yData[maxIdx]) maxIdx = i;
-      if (v < yData[minIdx]) minIdx = i;
-    });
-
-    const fmtPct = v => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
-    const annotations = [{
-      x: xVals[maxIdx], y: yData[maxIdx], text: `<b>${fmtPct(yData[maxIdx])}</b>`,
-      showarrow: false, yshift: 16, font: { color: T.INK_PRIMARY, size: 12, family: T.FONT_FAMILY }
-    }];
-    if (minIdx !== maxIdx) {
-      annotations.push({
-        x: xVals[minIdx], y: yData[minIdx], text: `<b>${fmtPct(yData[minIdx])}</b>`,
-        showarrow: false, yshift: -16, font: { color: T.INK_PRIMARY, size: 12, family: T.FONT_FAMILY }
-      });
-    }
-
-    const xTimes = xVals.map(d => d.getTime());
-    const xMin = new Date(Math.min(...xTimes));
-    const xMax = new Date(Math.max(...xTimes));
-    const padMs = Math.max((xMax - xMin) * 0.03, 2 * 86400000);
-    const xRangeMin = new Date(xMin.getTime() - padMs);
-    const xRangeMax = new Date(xMax.getTime() + padMs);
-
-    const data = [
-      { x: gainSeg.xs, y: gainSeg.ys, mode: 'lines', name: '獲利交易', line: { color: T.GOOD, width: 2 }, hoverinfo: 'skip' },
-      { x: lossSeg.xs, y: lossSeg.ys, mode: 'lines', name: '虧損交易', line: { color: T.CRITICAL, width: 2 }, hoverinfo: 'skip' },
-      {
-        x: xVals, y: yData, mode: 'markers',
-        customdata: trades.map(t => [t.trade_id, t.strategy_name]),
-        marker: { size: 10, color: markerColors, line: { width: 2, color: T.SURFACE } },
-        hovertemplate: '<b>交易編號:</b> %{customdata[0]}<br><b>策略:</b> %{customdata[1]}<br><b>平倉日期:</b> %{x|%Y-%m-%d}<br><b>結算損益:</b> %{y:+.2f}%<extra></extra>',
-        showlegend: false
-      }
-    ];
-
-    const layout = {
-      height: 400,
+  function baseLayout(height, yTitle) {
+    return {
+      height,
       margin: { l: 60, r: 30, t: 40, b: 40 },
-      hovermode: 'closest',
+      hovermode: 'x unified',
       plot_bgcolor: T.SURFACE,
       paper_bgcolor: 'rgba(0,0,0,0)',
       font: { family: T.FONT_FAMILY, color: T.INK_SECONDARY },
       legend: LEGEND_STYLE,
       hoverlabel: HOVERLABEL_STYLE,
-      annotations,
-      shapes: [{ type: 'line', x0: xRangeMin, x1: xRangeMax, y0: 0, y1: 0, line: { color: T.BASELINE, width: 1 } }],
-      xaxis: { range: [xRangeMin, xRangeMax], showgrid: true, gridcolor: T.GRID, linecolor: T.BASELINE, mirror: true, zeroline: false },
-      yaxis: { title: '單次結算報酬率 (%)', showgrid: true, gridcolor: T.GRID, linecolor: T.BASELINE, mirror: true, zeroline: false }
+      xaxis: { ...AXIS, type: 'category' },
+      yaxis: { ...AXIS, title: yTitle }
     };
-
-    return { data, layout };
   }
 
-  function buildCumPnlChart(trades) {
-    if (!trades || trades.length === 0) {
-      return { data: [], layout: { title: '暫無數據可繪製累積損益曲線' } };
-    }
-    const sorted = [...trades].sort((a, b) => new Date(a.sell_date) - new Date(b.sell_date));
-    let cum = 0;
-    const xVals = [], yVals = [];
-    sorted.forEach(t => {
-      cum += t.net_profit_loss;
-      xVals.push(new Date(t.sell_date));
-      yVals.push(cum);
-    });
+  function seriesColor(s, i, count) {
+    if (s.emphasis) return T.INK_PRIMARY;
+    if (count === 1) return T.GOOD;
+    return T.SERIES[i % T.SERIES.length];
+  }
 
-    const segments = splitAtZero(xVals, yVals);
+  function hasData(seriesList) {
+    return Array.isArray(seriesList) && seriesList.some(s => s.points && s.points.length > 0);
+  }
+
+  function buildCumReturnChart(seriesList) {
+    if (!hasData(seriesList)) return EMPTY;
     const data = [];
-    segments.forEach(seg => {
-      const color = seg.sign ? T.GOOD : T.CRITICAL;
-      const fillColor = seg.sign ? T.GOOD_FILL : T.CRITICAL_FILL;
-      data.push({ x: seg.x, y: seg.y, mode: 'lines', line: { color, width: 2 }, fill: 'tozeroy', fillcolor: fillColor, hoverinfo: 'skip', showlegend: false });
+    seriesList.forEach((s, i) => {
+      const x = s.points.map(p => p.period);
+      const line = { color: seriesColor(s, i, seriesList.length), width: s.emphasis ? 3 : 2 };
+      data.push({ x, y: s.points.map(p => p.cumReturn * 100), mode: 'lines+markers', name: s.name, line, visible: true, hovertemplate: '%{y:+.2f}%<extra>' + s.name + '</extra>' });
+      data.push({ x, y: s.points.map(p => p.cumPnl), mode: 'lines+markers', name: s.name, line, visible: false, hovertemplate: '%{y:+,.0f} 元<extra>' + s.name + '</extra>' });
     });
-
-    data.push({ x: [null], y: [null], mode: 'lines', name: '獲利區間', line: { color: T.GOOD, width: 2 } });
-    data.push({ x: [null], y: [null], mode: 'lines', name: '虧損區間', line: { color: T.CRITICAL, width: 2 } });
-
-    const markerColors = yVals.map(v => v >= 0 ? T.GOOD : T.CRITICAL);
-    data.push({
-      x: xVals, y: yVals, mode: 'markers',
-      marker: { size: 9, color: markerColors, line: { width: 2, color: T.SURFACE } },
-      customdata: sorted.map(t => [t.trade_id, t.net_profit_loss]),
-      hovertemplate: '<b>平倉日期:</b> %{x|%Y-%m-%d}<br><b>累積損益:</b> $%{y:+,.0f} 元<br><b>交易編號:</b> %{customdata[0]}<br><b>本筆損益:</b> $%{customdata[1]:+,.0f} 元<extra></extra>',
-      showlegend: false
-    });
-
-    const xTimes = xVals.map(d => d.getTime());
-    const xMin = new Date(Math.min(...xTimes));
-    const xMax = new Date(Math.max(...xTimes));
-    const padMs = Math.max((xMax - xMin) * 0.05, 2 * 86400000);
-    const xRangeMin = new Date(xMin.getTime() - padMs);
-    const xRangeMax = new Date(xMax.getTime() + padMs);
-
-    const lastX = xVals[xVals.length - 1];
-    const lastY = yVals[yVals.length - 1];
-    const sign = lastY >= 0 ? '+' : '-';
-    const lastLabel = `<b>$${sign}${Math.round(Math.abs(lastY)).toLocaleString('en-US')}</b>`;
-
-    const layout = {
-      height: 350,
-      margin: { l: 60, r: 30, t: 40, b: 40 },
-      hovermode: 'closest',
-      plot_bgcolor: T.SURFACE,
-      paper_bgcolor: 'rgba(0,0,0,0)',
-      font: { family: T.FONT_FAMILY, color: T.INK_SECONDARY },
-      legend: LEGEND_STYLE,
-      hoverlabel: HOVERLABEL_STYLE,
-      shapes: [{ type: 'line', x0: xRangeMin, x1: xRangeMax, y0: 0, y1: 0, line: { color: T.BASELINE, width: 1 } }],
-      annotations: [{ x: lastX, y: lastY, text: lastLabel, showarrow: false, xanchor: 'left', xshift: 14, font: { color: T.INK_PRIMARY, size: 13, family: T.FONT_FAMILY } }],
-      xaxis: { range: [xRangeMin, xRangeMax], showgrid: true, gridcolor: T.GRID, linecolor: T.BASELINE, mirror: true, zeroline: false },
-      yaxis: { title: '累積損益金額 (元)', showgrid: true, gridcolor: T.GRID, linecolor: T.BASELINE, mirror: true, zeroline: false }
-    };
-
+    const n = seriesList.length;
+    const retVisible = data.map((_, i) => i % 2 === 0);
+    const pnlVisible = retVisible.map(v => !v);
+    const layout = baseLayout(400, '累積報酬率 (%)');
+    layout.updatemenus = [{
+      type: 'buttons', direction: 'right', x: 0, xanchor: 'left', y: 1.15, yanchor: 'top', showactive: true,
+      buttons: [
+        { label: '累積報酬率', method: 'update', args: [{ visible: retVisible }, { 'yaxis.title': '累積報酬率 (%)' }] },
+        { label: '累積損益金額', method: 'update', args: [{ visible: pnlVisible }, { 'yaxis.title': '累積損益金額 (元)' }] }
+      ]
+    }];
+    layout.shapes = [{ type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 0, y1: 0, line: { color: T.BASELINE, width: 1 } }];
     return { data, layout };
   }
 
-  return { buildReturnsChart, buildCumPnlChart };
+  function buildPeriodReturnsChart(seriesList) {
+    if (!hasData(seriesList)) return EMPTY;
+    const data = seriesList.map((s, i) => {
+      const y = s.points.map(p => p.r * 100);
+      const color = seriesList.length === 1 ? y.map(v => v >= 0 ? T.GOOD : T.CRITICAL) : seriesColor(s, i, seriesList.length);
+      return { type: 'bar', x: s.points.map(p => p.period), y, name: s.name, marker: { color }, hovertemplate: '%{y:+.2f}%<extra>' + s.name + '</extra>' };
+    });
+    const layout = baseLayout(350, '每期報酬率 (%)');
+    layout.barmode = 'group';
+    layout.showlegend = seriesList.length > 1;
+    return { data, layout };
+  }
+
+  function buildDrawdownChart(points) {
+    if (!points || points.length === 0) return EMPTY;
+    const data = [{
+      x: points.map(p => p.period), y: points.map(p => p.drawdown * 100), mode: 'lines',
+      name: '回撤', line: { color: T.CRITICAL, width: 2 }, fill: 'tozeroy', fillcolor: T.CRITICAL_FILL,
+      hovertemplate: '%{y:.2f}%<extra>回撤</extra>'
+    }];
+    const layout = baseLayout(260, '回撤 (%)');
+    layout.showlegend = false;
+    return { data, layout };
+  }
+
+  return { buildCumReturnChart, buildPeriodReturnsChart, buildDrawdownChart };
 })();
