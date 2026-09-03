@@ -22,7 +22,7 @@ TPT.charts = (function () {
   const HOVERLABEL_STYLE = { bgcolor: T.SURFACE, bordercolor: T.GRID, font: { family: T.FONT_FAMILY, size: 12, color: T.INK_PRIMARY } };
   const AXIS = { showgrid: true, gridcolor: T.GRID, linecolor: T.BASELINE, mirror: true, zeroline: false };
 
-  function baseLayout(height, yTitle) {
+  function baseLayout(height, yTitle, periods) {
     return {
       height,
       margin: { l: 60, r: 30, t: 40, b: 40 },
@@ -32,7 +32,8 @@ TPT.charts = (function () {
       font: { family: T.FONT_FAMILY, color: T.INK_SECONDARY },
       legend: LEGEND_STYLE,
       hoverlabel: HOVERLABEL_STYLE,
-      xaxis: { ...AXIS, type: 'category', categoryorder: 'category ascending' },
+      // ponytail: 明確給月份順序；Plotly 2.35 的 'category ascending' 遇到 visible:false 的 trace 會崩潰
+      xaxis: { ...AXIS, type: 'category', categoryorder: 'array', categoryarray: periods },
       yaxis: { ...AXIS, title: yTitle }
     };
   }
@@ -41,6 +42,10 @@ TPT.charts = (function () {
     if (s.emphasis) return T.INK_PRIMARY;
     if (count === 1) return T.GOOD;
     return T.SERIES[i % T.SERIES.length];
+  }
+
+  function sortedPeriods(seriesList) {
+    return [...new Set(seriesList.flatMap(s => s.points.map(p => p.period)))].sort();
   }
 
   function hasData(seriesList) {
@@ -58,7 +63,7 @@ TPT.charts = (function () {
     });
     const retVisible = data.map((_, i) => i % 2 === 0);
     const pnlVisible = retVisible.map(v => !v);
-    const layout = baseLayout(400, '累積報酬率 (%)');
+    const layout = baseLayout(400, '累積報酬率 (%)', sortedPeriods(seriesList));
     layout.updatemenus = [{
       type: 'buttons', direction: 'right', x: 0, xanchor: 'left', y: 1.15, yanchor: 'top', showactive: true,
       buttons: [
@@ -77,7 +82,7 @@ TPT.charts = (function () {
       const color = seriesList.length === 1 ? y.map(v => v >= 0 ? T.GOOD : T.CRITICAL) : seriesColor(s, i, seriesList.length);
       return { type: 'bar', x: s.points.map(p => p.period), y, name: s.name, marker: { color }, hovertemplate: '%{y:+.2f}%<extra>' + s.name + '</extra>' };
     });
-    const layout = baseLayout(350, '每期報酬率 (%)');
+    const layout = baseLayout(350, '每期報酬率 (%)', sortedPeriods(seriesList));
     layout.barmode = 'group';
     layout.showlegend = seriesList.length > 1;
     return { data, layout };
@@ -90,7 +95,7 @@ TPT.charts = (function () {
       name: '回撤', line: { color: T.CRITICAL, width: 2 }, fill: 'tozeroy', fillcolor: T.CRITICAL_FILL,
       hovertemplate: '%{y:.2f}%<extra>回撤</extra>'
     }];
-    const layout = baseLayout(260, '回撤 (%)');
+    const layout = baseLayout(260, '回撤 (%)', points.map(p => p.period));
     layout.showlegend = false;
     return { data, layout };
   }

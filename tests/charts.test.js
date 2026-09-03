@@ -53,7 +53,12 @@ assertEqual('dd empty', TPT.charts.buildDrawdownChart([]).data.length, 0);
 const pJan = TPT.timeSeries.buildPeriodSeries([mk('J1', 'J', '2026-01-05', 1, 100, 10000), mk('J3', 'J', '2026-03-05', 1, 100, 10000)]).points;
 const pFeb = TPT.timeSeries.buildPeriodSeries([mk('F2', 'F', '2026-02-05', 1, 100, 10000)]).points;
 const cDisjoint = TPT.charts.buildCumReturnChart([{ name: 'J', points: pJan }, { name: 'F', points: pFeb }]);
-assertEqual('category axis sorted ascending', cDisjoint.layout.xaxis.categoryorder, 'category ascending');
-assertEqual('bar axis sorted ascending', TPT.charts.buildPeriodReturnsChart([{ name: 'J', points: pJan }]).layout.xaxis.categoryorder, 'category ascending');
+// Plotly 2.35 在 categoryorder 'category ascending' 遇到 visible:false 的 trace 會崩潰，改用明確的 categoryarray
+assertEqual('cum axis uses explicit array order', cDisjoint.layout.xaxis.categoryorder, 'array');
+assertEqual('cum axis categoryarray is sorted union', cDisjoint.layout.xaxis.categoryarray.join(','), '2026-01,2026-02,2026-03');
+const bDisjoint = TPT.charts.buildPeriodReturnsChart([{ name: 'J', points: pJan }, { name: 'F', points: pFeb }]);
+assertEqual('bar axis uses explicit array order', bDisjoint.layout.xaxis.categoryorder, 'array');
+assertEqual('bar axis categoryarray is sorted union', bDisjoint.layout.xaxis.categoryarray.join(','), '2026-01,2026-02,2026-03');
+assertEqual('dd axis categoryarray', TPT.charts.buildDrawdownChart(pJan).layout.xaxis.categoryarray.join(','), '2026-01,2026-03');
 
 reportResults();
