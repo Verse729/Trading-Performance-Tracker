@@ -14,6 +14,7 @@
 - 小改：`js/forms.js`（新增欄位）、`js/report.js`（沿用新建構函式）、`js/config.js`
 - 不動：`js/db.js`、`js/backup.js`
 - 對應更新 `tests/` 下的測試頁
+- 更新 `CLAUDE.md` 的 Key Design Decisions（權益曲線模型、最大回撤、月報酬估算三段改為本設計）
 
 ## 資料模型
 
