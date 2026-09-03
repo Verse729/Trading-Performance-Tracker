@@ -1,19 +1,21 @@
 window.TPT = window.TPT || {};
 
 TPT.forms = (function () {
-  function validateNewTrade(input) {
-    if (!input.trade_id.trim() || !input.strategy_name.trim()) {
+  function validateTrade(input, existingTrades, editingTradeId) {
+    if (!String(input.trade_id || '').trim() || !String(input.strategy_name || '').trim()) {
       return { valid: false, error: '交易編號與策略名稱不能為空！' };
     }
     if (new Date(input.buy_date) > new Date(input.sell_date)) {
       return { valid: false, error: '賣出日期不能早於買進日期！' };
     }
-    return { valid: true };
-  }
-
-  function validateDatesOnly(buyDate, sellDate) {
-    if (new Date(buyDate) > new Date(sellDate)) {
-      return { valid: false, error: '賣出日期不能早於買進日期！' };
+    if (!(input.capital > 0)) {
+      return { valid: false, error: '投入資金必須大於 0！' };
+    }
+    const period = TPT.timeSeries.periodOf(input.buy_date);
+    const name = String(input.strategy_name).trim();
+    const dup = (existingTrades || []).find(t => t.trade_id !== editingTradeId && t.strategy_name === name && TPT.timeSeries.periodOf(t.buy_date) === period);
+    if (dup) {
+      return { valid: false, error: `策略「${TPT.utils.escapeHtml(name)}」在 ${period} 已有交易 ${TPT.utils.escapeHtml(dup.trade_id)}，每期只能一筆！` };
     }
     return { valid: true };
   }
@@ -39,6 +41,7 @@ TPT.forms = (function () {
             <div class="form-field"><label>版本編號</label><input type="text" name="version" placeholder="例如: v1.0"></div>
             <div class="form-field"><label>買進日期</label><input type="date" name="buy_date"></div>
             <div class="form-field"><label>賣出日期</label><input type="date" name="sell_date"></div>
+            <div class="form-field"><label>投入資金 (元)</label><input type="number" step="1000" min="1" name="capital" placeholder="例如: 1000000"></div>
             <div class="form-field"><label>結算報酬率 (%)</label><input type="number" step="0.01" name="net_return_pct" value="0"></div>
             <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="100" name="net_profit_loss" value="0"></div>
           </div>
@@ -70,19 +73,20 @@ TPT.forms = (function () {
       e.preventDefault();
       const fd = new FormData(addForm);
       const input = {
-        trade_id: fd.get('trade_id'), strategy_name: fd.get('strategy_name'),
+        trade_id: fd.get('trade_id').trim(), strategy_name: fd.get('strategy_name').trim(),
         version: fd.get('version').trim() || 'v1.0',
         buy_date: fd.get('buy_date'), sell_date: fd.get('sell_date'),
+        capital: parseFloat(fd.get('capital')),
         net_return_pct: parseFloat(fd.get('net_return_pct')) || 0,
         net_profit_loss: parseFloat(fd.get('net_profit_loss')) || 0
       };
-      const validation = validateNewTrade(input);
+      const validation = validateTrade(input, await callbacks.getAllTrades());
       if (!validation.valid) {
         showAlert(addAlert, 'error', `❌ ${validation.error}`);
         return;
       }
       try {
-        await callbacks.addTrade({ ...input, trade_id: input.trade_id.trim(), strategy_name: input.strategy_name.trim() });
+        await callbacks.addTrade(input);
         showAlert(addAlert, 'success', `🎉 交易 ${TPT.utils.escapeHtml(input.trade_id)} 新增成功！`);
         addForm.reset();
         await callbacks.onChange();
@@ -113,6 +117,7 @@ TPT.forms = (function () {
           <div class="form-field"><label>版本編號</label><input type="text" name="version"></div>
           <div class="form-field"><label>買進日期</label><input type="date" name="buy_date"></div>
           <div class="form-field"><label>賣出日期</label><input type="date" name="sell_date"></div>
+          <div class="form-field"><label>投入資金 (元)</label><input type="number" step="1000" min="1" name="capital"></div>
           <div class="form-field"><label>結算報酬率 (%)</label><input type="number" step="0.01" name="net_return_pct"></div>
           <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="100" name="net_profit_loss"></div>
         </div>
@@ -128,6 +133,7 @@ TPT.forms = (function () {
       form.version.value = t.version;
       form.buy_date.value = t.buy_date;
       form.sell_date.value = t.sell_date;
+      form.capital.value = t.capital || '';
       form.net_return_pct.value = t.net_return_pct;
       form.net_profit_loss.value = t.net_profit_loss;
     }
@@ -137,22 +143,23 @@ TPT.forms = (function () {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form);
-      const buyDate = fd.get('buy_date'), sellDate = fd.get('sell_date');
-      const validation = validateDatesOnly(buyDate, sellDate);
+      const tradeId = select.value;
+      const input = {
+        trade_id: tradeId,
+        strategy_name: fd.get('strategy_name').trim(),
+        version: fd.get('version').trim(),
+        buy_date: fd.get('buy_date'), sell_date: fd.get('sell_date'),
+        capital: parseFloat(fd.get('capital')),
+        net_return_pct: parseFloat(fd.get('net_return_pct')) || 0,
+        net_profit_loss: parseFloat(fd.get('net_profit_loss')) || 0
+      };
+      const validation = validateTrade(input, trades, tradeId);
       if (!validation.valid) {
         showAlert(alertEl, 'error', `❌ ${validation.error}`);
         return;
       }
-      const tradeId = select.value;
       try {
-        await callbacks.updateTrade({
-          trade_id: tradeId,
-          strategy_name: fd.get('strategy_name').trim(),
-          version: fd.get('version').trim(),
-          buy_date: buyDate, sell_date: sellDate,
-          net_return_pct: parseFloat(fd.get('net_return_pct')) || 0,
-          net_profit_loss: parseFloat(fd.get('net_profit_loss')) || 0
-        });
+        await callbacks.updateTrade(input);
         showAlert(alertEl, 'success', `📝 交易 ${TPT.utils.escapeHtml(tradeId)} 修改成功！`);
         await callbacks.onChange();
       } catch (err) {
@@ -196,5 +203,5 @@ TPT.forms = (function () {
     });
   }
 
-  return { render, validateNewTrade, validateDatesOnly };
+  return { render, validateTrade };
 })();
