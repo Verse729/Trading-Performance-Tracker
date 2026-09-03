@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><title>DB 測試</title></head>
+<body>
+<h1>IndexedDB CRUD 測試</h1>
+<div id="results"></div>
+<script src="../js/config.js"></script>
+<script src="../js/db.js"></script>
+<script>
+const TEST_ID = '__TEST_TRADE_001__';
+const results = [];
+function record(name, pass) { results.push({ name, pass }); }
+
+async function runTests() {
+  try {
+    await TPT.db.deleteTrade(TEST_ID).catch(() => {});
+
+    await TPT.db.addTrade({
+      trade_id: TEST_ID, strategy_name: 'TestStrat', version: 'v1.0',
+      buy_date: '2026-01-01', sell_date: '2026-01-05',
+      net_return_pct: 1.5, net_profit_loss: 15000
+    });
+    let all = await TPT.db.getAllTrades();
+    let found = all.find(t => t.trade_id === TEST_ID);
+    record('新增後可讀取', !!found && found.net_return_pct === 1.5);
+
+    let addAgainFailed = false;
+    try {
+      await TPT.db.addTrade({
+        trade_id: TEST_ID, strategy_name: 'Dup', version: 'v1.0',
+        buy_date: '2026-01-01', sell_date: '2026-01-05',
+        net_return_pct: 0, net_profit_loss: 0
+      });
+    } catch (e) {
+      addAgainFailed = true;
+    }
+    record('重複編號新增應失敗', addAgainFailed);
+
+    await TPT.db.updateTrade({
+      trade_id: TEST_ID, strategy_name: 'TestStrat', version: 'v1.1',
+      buy_date: '2026-01-01', sell_date: '2026-01-05',
+      net_return_pct: 3.0, net_profit_loss: 30000
+    });
+    all = await TPT.db.getAllTrades();
+    found = all.find(t => t.trade_id === TEST_ID);
+    record('修改後資料更新', found && found.version === 'v1.1' && found.net_return_pct === 3.0);
+
+    await TPT.db.deleteTrade(TEST_ID);
+    all = await TPT.db.getAllTrades();
+    found = all.find(t => t.trade_id === TEST_ID);
+    record('刪除後資料消失', !found);
+
+    await TPT.db.setSetting('test_key', { foo: 'bar' });
+    const settingValue = await TPT.db.getSetting('test_key');
+    record('settings 讀寫正常', settingValue && settingValue.foo === 'bar');
+  } catch (err) {
+    record('測試流程未預期中斷: ' + err.message, false);
+  } finally {
+    await TPT.db.deleteTrade(TEST_ID).catch(() => {});
+  }
+
+  const resultsEl = document.getElementById('results');
+  let allPass = true;
+  results.forEach(r => {
+    if (!r.pass) allPass = false;
+    const line = document.createElement('div');
+    line.style.color = r.pass ? 'green' : 'red';
+    line.textContent = `[${r.pass ? 'PASS' : 'FAIL'}] ${r.name}`;
+    resultsEl.appendChild(line);
+  });
+  const summary = document.createElement('h2');
+  summary.textContent = allPass ? '全部通過 ✅' : '有測試失敗 ❌';
+  summary.style.color = allPass ? 'green' : 'red';
+  resultsEl.prepend(summary);
+}
+
+runTests();
+</script>
+</body>
+</html>

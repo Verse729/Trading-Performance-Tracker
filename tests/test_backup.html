@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><title>備份功能手動測試</title></head>
+<body>
+<h1>備份功能手動測試（需要手動點擊操作）</h1>
+<p>File System Access API 需要真實使用者手勢與檔案總管互動，無法自動化，請依序點擊下方按鈕並觀察結果。</p>
+<button id="btn-support">1. 檢查瀏覽器支援度</button>
+<pre id="out-support"></pre>
+<button id="btn-choose">2. 選擇備份檔案</button>
+<pre id="out-choose"></pre>
+<button id="btn-write">3. 寫入測試資料到備份檔</button>
+<pre id="out-write"></pre>
+<button id="btn-export">4. 手動匯出 JSON（應觸發下載）</button>
+<hr>
+<p>5. 手動匯入測試：</p>
+<input type="file" id="file-import" accept=".json">
+<pre id="out-import"></pre>
+
+<script src="../js/config.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/backup.js"></script>
+<script>
+const fixture = [
+  { trade_id: 'BKTEST01', strategy_name: 'Backup Test', version: 'v1.0', buy_date: '2026-01-01', sell_date: '2026-01-05', net_return_pct: 1.0, net_profit_loss: 1000 }
+];
+
+document.getElementById('btn-support').onclick = () => {
+  document.getElementById('out-support').textContent = 'supported: ' + TPT.backup.isFileSystemAccessSupported();
+};
+
+document.getElementById('btn-choose').onclick = async () => {
+  try {
+    await TPT.backup.chooseBackupFile();
+    document.getElementById('out-choose').textContent = '已選定備份檔案。';
+  } catch (e) {
+    document.getElementById('out-choose').textContent = '錯誤: ' + e.message;
+  }
+};
+
+document.getElementById('btn-write').onclick = async () => {
+  const result = await TPT.backup.writeIfConfigured(fixture);
+  document.getElementById('out-write').textContent = JSON.stringify(result) + ' — 請打開你選的檔案確認內容為 fixture JSON';
+};
+
+document.getElementById('btn-export').onclick = () => {
+  TPT.backup.exportJson(fixture);
+};
+
+document.getElementById('file-import').onchange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const data = await TPT.backup.importJsonFile(file);
+    document.getElementById('out-import').textContent = JSON.stringify(data, null, 2);
+  } catch (err) {
+    document.getElementById('out-import').textContent = '錯誤: ' + err.message;
+  }
+};
+</script>
+</body>
+</html>
