@@ -43,7 +43,7 @@ TPT.dashboard = (function () {
   }
 
   function buildSummaryCardsHtml(m) {
-    const sub = m.n > 0 ? `${m.n} 期，${m.first_period} 至 ${m.last_period}` : '尚無交易';
+    const sub = m.n > 0 ? `${m.n} 期，${esc(m.first_period)} 至 ${esc(m.last_period)}` : '尚無交易';
     return SUMMARY_DEFS.map(([label, fmt, tone]) => card(label, fmt(m), toneColor(tone(m)), '', sub)).join('');
   }
 

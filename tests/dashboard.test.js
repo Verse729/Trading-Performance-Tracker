@@ -41,4 +41,7 @@ assertEqual('static table has capital', staticTable.includes('1,000,000'), true)
 assertEqual('static table marks missing capital', staticTable.includes('capital-missing'), true);
 assertEqual('static table escapes', D.buildStaticTableHtml([{ ...trades[0], strategy_name: '<b>x' }]).includes('&lt;b&gt;x'), true);
 
+const xssMetrics = { ...metrics, first_period: '<b>x', last_period: '2026-03' };
+assertEqual('summary escapes period', D.buildSummaryCardsHtml(xssMetrics).includes('&lt;b&gt;x'), true);
+
 reportResults();
