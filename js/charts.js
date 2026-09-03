@@ -32,7 +32,7 @@ TPT.charts = (function () {
       font: { family: T.FONT_FAMILY, color: T.INK_SECONDARY },
       legend: LEGEND_STYLE,
       hoverlabel: HOVERLABEL_STYLE,
-      xaxis: { ...AXIS, type: 'category' },
+      xaxis: { ...AXIS, type: 'category', categoryorder: 'category ascending' },
       yaxis: { ...AXIS, title: yTitle }
     };
   }
@@ -56,7 +56,6 @@ TPT.charts = (function () {
       data.push({ x, y: s.points.map(p => p.cumReturn * 100), mode: 'lines+markers', name: s.name, line, visible: true, hovertemplate: '%{y:+.2f}%<extra>' + s.name + '</extra>' });
       data.push({ x, y: s.points.map(p => p.cumPnl), mode: 'lines+markers', name: s.name, line, visible: false, hovertemplate: '%{y:+,.0f} 元<extra>' + s.name + '</extra>' });
     });
-    const n = seriesList.length;
     const retVisible = data.map((_, i) => i % 2 === 0);
     const pnlVisible = retVisible.map(v => !v);
     const layout = baseLayout(400, '累積報酬率 (%)');

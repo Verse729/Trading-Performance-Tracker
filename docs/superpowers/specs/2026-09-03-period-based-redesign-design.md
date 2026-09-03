@@ -41,6 +41,7 @@
 
 **全部策略**：依 `period` 分組，
 `r = Σ pnl / Σ capital`（排除資金未填者），`pnl = Σ pnl`（含所有筆）。
+若某期只有一筆交易，直接用該筆的 `net_return_pct / 100`，避免以四捨五入後的資金反推報酬。
 
 每期輸出 `{ period, r, pnl, cumReturn, cumPnl, drawdown }`：
 

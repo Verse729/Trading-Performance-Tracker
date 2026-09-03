@@ -38,7 +38,8 @@ TPT.report = (function () {
     const strategySection = strategyRows && strategyRows.length
       ? `<div class="section-title">策略比較</div>${D.buildStrategyTableHtml(strategyRows)}`
       : '';
-    const plot = (id, fig) => `Plotly.newPlot('${id}', ${JSON.stringify(fig.data)}, ${JSON.stringify(fig.layout)}, {responsive: true, displaylogo: false});`;
+    const j = (o) => JSON.stringify(o).replace(/</g, '\\u003c');
+    const plot = (id, fig) => `Plotly.newPlot('${id}', ${j(fig.data)}, ${j(fig.layout)}, {responsive: true, displaylogo: false});`;
 
     return `<!doctype html>
 <html lang="zh-Hant">

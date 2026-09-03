@@ -50,4 +50,10 @@ assertEqual('cum empty', TPT.charts.buildCumReturnChart([]).data.length, 0);
 assertEqual('bar empty', TPT.charts.buildPeriodReturnsChart([{ name: 'A', points: [] }]).data.length, 0);
 assertEqual('dd empty', TPT.charts.buildDrawdownChart([]).data.length, 0);
 
+const pJan = TPT.timeSeries.buildPeriodSeries([mk('J1', 'J', '2026-01-05', 1, 100, 10000), mk('J3', 'J', '2026-03-05', 1, 100, 10000)]).points;
+const pFeb = TPT.timeSeries.buildPeriodSeries([mk('F2', 'F', '2026-02-05', 1, 100, 10000)]).points;
+const cDisjoint = TPT.charts.buildCumReturnChart([{ name: 'J', points: pJan }, { name: 'F', points: pFeb }]);
+assertEqual('category axis sorted ascending', cDisjoint.layout.xaxis.categoryorder, 'category ascending');
+assertEqual('bar axis sorted ascending', TPT.charts.buildPeriodReturnsChart([{ name: 'J', points: pJan }]).layout.xaxis.categoryorder, 'category ascending');
+
 reportResults();

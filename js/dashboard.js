@@ -9,8 +9,8 @@ TPT.dashboard = (function () {
     const sign = value >= 0 ? '+' : '-';
     return sign + Math.round(Math.abs(value)).toLocaleString('en-US');
   }
-  function fmtPct(v) { return v === null || v === undefined ? '—' : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(2)}%`; }
-  function fmtRatio(v) { return v === null || v === undefined ? '—' : v.toFixed(2); }
+  function fmtPct(v) { return !Number.isFinite(v) ? '—' : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(2)}%`; }
+  function fmtRatio(v) { return !Number.isFinite(v) ? '—' : v.toFixed(2); }
   function fmtInt(v) { return v === null || v === undefined ? '—' : Math.round(v).toLocaleString('en-US'); }
 
   function toneColor(v) {

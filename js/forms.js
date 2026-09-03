@@ -15,7 +15,7 @@ TPT.forms = (function () {
     const name = String(input.strategy_name).trim();
     const dup = (existingTrades || []).find(t => t.trade_id !== editingTradeId && t.strategy_name === name && TPT.timeSeries.periodOf(t.buy_date) === period);
     if (dup) {
-      return { valid: false, error: `策略「${TPT.utils.escapeHtml(name)}」在 ${period} 已有交易 ${TPT.utils.escapeHtml(dup.trade_id)}，每期只能一筆！` };
+      return { valid: false, error: `策略「${TPT.utils.escapeHtml(name)}」在 ${TPT.utils.escapeHtml(period)} 已有交易 ${TPT.utils.escapeHtml(dup.trade_id)}，每期只能一筆！` };
     }
     return { valid: true };
   }
@@ -39,9 +39,9 @@ TPT.forms = (function () {
             <div class="form-field"><label>交易編號 (不重複)</label><input type="text" name="trade_id" placeholder="例如: T001"></div>
             <div class="form-field"><label>策略名稱</label><input type="text" name="strategy_name" placeholder="例如: 均線交叉"></div>
             <div class="form-field"><label>版本編號</label><input type="text" name="version" placeholder="例如: v1.0"></div>
-            <div class="form-field"><label>買進日期</label><input type="date" name="buy_date"></div>
-            <div class="form-field"><label>賣出日期</label><input type="date" name="sell_date"></div>
-            <div class="form-field"><label>投入資金 (元)</label><input type="number" step="1000" min="1" name="capital" placeholder="例如: 1000000"></div>
+            <div class="form-field"><label>買進日期</label><input type="date" name="buy_date" required></div>
+            <div class="form-field"><label>賣出日期</label><input type="date" name="sell_date" required></div>
+            <div class="form-field"><label>投入資金 (元)</label><input type="number" step="1000" min="1" name="capital" placeholder="例如: 1000000" required></div>
             <div class="form-field"><label>結算報酬率 (%)</label><input type="number" step="0.01" name="net_return_pct" value="0"></div>
             <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="100" name="net_profit_loss" value="0"></div>
           </div>
@@ -115,9 +115,9 @@ TPT.forms = (function () {
         <div class="form-grid">
           <div class="form-field"><label>策略名稱</label><input type="text" name="strategy_name"></div>
           <div class="form-field"><label>版本編號</label><input type="text" name="version"></div>
-          <div class="form-field"><label>買進日期</label><input type="date" name="buy_date"></div>
-          <div class="form-field"><label>賣出日期</label><input type="date" name="sell_date"></div>
-          <div class="form-field"><label>投入資金 (元)</label><input type="number" step="1000" min="1" name="capital"></div>
+          <div class="form-field"><label>買進日期</label><input type="date" name="buy_date" required></div>
+          <div class="form-field"><label>賣出日期</label><input type="date" name="sell_date" required></div>
+          <div class="form-field"><label>投入資金 (元)</label><input type="number" step="1000" min="1" name="capital" required></div>
           <div class="form-field"><label>結算報酬率 (%)</label><input type="number" step="0.01" name="net_return_pct"></div>
           <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="100" name="net_profit_loss"></div>
         </div>
@@ -133,7 +133,7 @@ TPT.forms = (function () {
       form.version.value = t.version;
       form.buy_date.value = t.buy_date;
       form.sell_date.value = t.sell_date;
-      form.capital.value = t.capital || '';
+      form.capital.value = TPT.timeSeries.capitalOf(t) || '';
       form.net_return_pct.value = t.net_return_pct;
       form.net_profit_loss.value = t.net_profit_loss;
     }

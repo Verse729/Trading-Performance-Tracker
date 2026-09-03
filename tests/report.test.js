@@ -30,4 +30,9 @@ assertEqual('report escapes strategy name', TPT.report.buildReportHtml({ strateg
 const oneHtml = TPT.report.buildReportHtml({ strategyName: 'StratB', metrics: one.metrics, trades: one.filtered, strategyRows: [], figs: one.figs });
 assertEqual('single report has no strategy table', oneHtml.includes('策略比較'), false);
 
+const evil = [{ trade_id: 'E1', strategy_name: '</script><img src=x onerror=alert(1)>', version: 'v1', buy_date: '2026-01-05', sell_date: '2026-01-20', net_return_pct: 1, net_profit_loss: 1000, capital: 100000 }];
+const evilView = TPT.app.buildView(evil, '全部策略');
+const evilHtml = TPT.report.buildReportHtml({ strategyName: '全部策略', metrics: evilView.metrics, trades: evilView.filtered, strategyRows: evilView.strategyRows, figs: evilView.figs });
+assertEqual('report script payload has no raw </script>', evilHtml.split('</script>').length, 3);
+
 reportResults();

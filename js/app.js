@@ -39,6 +39,9 @@ TPT.app = (function () {
     if (!file) return;
     try {
       const data = await TPT.backup.importJsonFile(file);
+      const REQUIRED = ['trade_id', 'strategy_name', 'buy_date', 'sell_date'];
+      const bad = data.filter(t => !t || REQUIRED.some(k => !t[k]) || typeof t.net_return_pct !== 'number' || typeof t.net_profit_loss !== 'number');
+      if (bad.length) throw new Error(`${bad.length} 筆資料欄位不完整，已取消匯入。`);
       for (const trade of data) {
         await TPT.db.updateTrade(trade);
       }
@@ -121,8 +124,13 @@ TPT.app = (function () {
     TPT.dashboard.renderSummaryCards(view.metrics, document.getElementById('summary-cards'));
     TPT.dashboard.renderDetailCards(view.metrics, document.getElementById('detail-cards'));
     const notice = document.getElementById('capital-notice');
-    notice.textContent = view.metrics.unfilled_count > 0 ? `⚠️ 有 ${view.metrics.unfilled_count} 筆交易資金未填且報酬率為 0，已從合併報酬中排除。` : '';
-    notice.hidden = view.metrics.unfilled_count === 0;
+    const k = view.metrics.unfilled_count;
+    notice.textContent = k > 0
+      ? (currentStrategy === ALL_STRATEGIES
+          ? `⚠️ 有 ${k} 筆交易資金未填且報酬率為 0，已從合併報酬中排除。`
+          : `⚠️ 有 ${k} 筆交易資金未填，請補填。`)
+      : '';
+    notice.hidden = k === 0;
 
     Plotly.newPlot('cum-return-chart', view.figs.cumReturn.data, view.figs.cumReturn.layout, plotOpts);
     Plotly.newPlot('period-returns-chart', view.figs.periodReturns.data, view.figs.periodReturns.layout, plotOpts);
@@ -158,5 +166,7 @@ TPT.app = (function () {
 })();
 
 if (typeof document !== 'undefined') {
-  window.addEventListener('DOMContentLoaded', () => { TPT.app.init(); });
+  window.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('strategy-select')) TPT.app.init();
+  });
 }

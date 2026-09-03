@@ -44,4 +44,6 @@ assertEqual('static table escapes', D.buildStaticTableHtml([{ ...trades[0], stra
 const xssMetrics = { ...metrics, first_period: '<b>x', last_period: '2026-03' };
 assertEqual('summary escapes period', D.buildSummaryCardsHtml(xssMetrics).includes('&lt;b&gt;x'), true);
 
+assertEqual('fmtPct NaN', D.fmtPct(NaN), '—');
+
 reportResults();

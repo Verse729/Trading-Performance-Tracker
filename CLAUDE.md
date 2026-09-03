@@ -13,7 +13,7 @@ A pure client-side (no server, no Python) trading performance tracker. Double-cl
 
 ## Running Tests
 
-There is no formal test framework — tests are standalone HTML pages you open directly in a browser and read PASS/FAIL from the page (see `tests/`).
+There is no formal test framework — tests are standalone HTML pages you open directly in a browser and read PASS/FAIL from the page (see `tests/`); the same `tests/*.test.js` files also run headless with `node tests/<name>.test.js`.
 
 ## Architecture
 
