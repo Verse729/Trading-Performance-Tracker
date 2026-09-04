@@ -51,9 +51,9 @@ TPT.forms = (function () {
             <div class="form-field"><label>版本編號</label><input type="text" name="version" placeholder="例如: v1.0"></div>
             <div class="form-field"><label>買進日期</label><input type="date" name="buy_date" required></div>
             <div class="form-field"><label>賣出日期</label><input type="date" name="sell_date" required></div>
-            <div class="form-field"><label>投入資金 (元)</label><input type="number" step="1000" min="1" name="capital" placeholder="例如: 1000000" required></div>
+            <div class="form-field"><label>投入資金 (元)</label><input type="number" step="any" min="1" name="capital" placeholder="例如: 1000000" required></div>
             <div class="form-field"><label>結算報酬率 (%)</label><input type="number" step="0.01" name="net_return_pct" value="0"></div>
-            <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="100" name="net_profit_loss" value="0"></div>
+            <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="any" name="net_profit_loss" value="0"></div>
           </div>
           <button type="submit" class="btn btn-primary">確認新增</button>
         </form>
@@ -128,9 +128,9 @@ TPT.forms = (function () {
           <div class="form-field"><label>版本編號</label><input type="text" name="version"></div>
           <div class="form-field"><label>買進日期</label><input type="date" name="buy_date" required></div>
           <div class="form-field"><label>賣出日期</label><input type="date" name="sell_date" required></div>
-          <div class="form-field"><label>投入資金 (元)</label><input type="number" step="1000" min="1" name="capital" required></div>
+          <div class="form-field"><label>投入資金 (元)</label><input type="number" step="any" min="1" name="capital" required></div>
           <div class="form-field"><label>結算報酬率 (%)</label><input type="number" step="0.01" name="net_return_pct"></div>
-          <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="100" name="net_profit_loss"></div>
+          <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="any" name="net_profit_loss"></div>
         </div>
         <button type="submit" class="btn btn-primary">確認修改</button>
       </form>`;
