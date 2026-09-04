@@ -3,52 +3,21 @@
 <head><meta charset="utf-8"><title>圖表測試</title></head>
 <body>
 <h1>圖表建構測試</h1>
-<div id="assert-results"></div>
-<h2>單筆結算報酬率</h2>
-<div id="chart1" style="width:800px;"></div>
-<h2>累積損益曲線</h2>
-<div id="chart2" style="width:800px;"></div>
-
+<div id="results"></div>
+<h2>視覺檢查</h2>
+<div id="chart-cum" style="width:100%;max-width:900px;"></div>
+<div id="chart-bar" style="width:100%;max-width:900px;"></div>
+<div id="chart-dd" style="width:100%;max-width:900px;"></div>
 <script src="../lib/plotly.min.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/timeSeries.js"></script>
 <script src="../js/charts.js"></script>
+<script src="harness.js"></script>
+<script src="charts.test.js"></script>
 <script>
-const fixture = [
-  { trade_id: 'T001', strategy_name: 'StratA', buy_date: '2026-01-12', sell_date: '2026-01-20', net_return_pct: 6.0, net_profit_loss: 60000.0 },
-  { trade_id: 'T002', strategy_name: 'StratA', buy_date: '2026-02-11', sell_date: '2026-03-10', net_return_pct: -2.0, net_profit_loss: -20000.0 },
-  { trade_id: 'T003', strategy_name: 'StratA', buy_date: '2026-03-11', sell_date: '2026-03-25', net_return_pct: 3.0, net_profit_loss: 30000.0 }
-];
-
-const results = [];
-function record(name, pass) { results.push({ name, pass }); }
-
-const returnsFig = TPT.charts.buildReturnsChart(fixture);
-record('returns chart 有 3 條 trace（gain/loss/markers）', returnsFig.data.length === 3);
-record('returns chart 的 markers trace 有 3 個點', returnsFig.data[2].x.length === 3);
-
-const cumFig = TPT.charts.buildCumPnlChart(fixture);
-record('cum pnl chart 的最後一條 trace（markers）有 3 個點', cumFig.data[cumFig.data.length - 1].x.length === 3);
-
-Plotly.newPlot('chart1', returnsFig.data, returnsFig.layout, { responsive: true, displaylogo: false });
-Plotly.newPlot('chart2', cumFig.data, cumFig.layout, { responsive: true, displaylogo: false });
-
-const emptyFig = TPT.charts.buildReturnsChart([]);
-record('空交易陣列 returns chart 無資料 trace', emptyFig.data.length === 0);
-
-const resultsEl = document.getElementById('assert-results');
-let allPass = true;
-results.forEach(r => {
-  if (!r.pass) allPass = false;
-  const line = document.createElement('div');
-  line.style.color = r.pass ? 'green' : 'red';
-  line.textContent = `[${r.pass ? 'PASS' : 'FAIL'}] ${r.name}`;
-  resultsEl.appendChild(line);
-});
-const summary = document.createElement('h3');
-summary.textContent = allPass
-  ? '結構性測試全部通過 ✅（請再肉眼確認下方兩張圖表顯示正常、顏色與 hover 正確）'
-  : '有測試失敗 ❌';
-summary.style.color = allPass ? 'green' : 'red';
-resultsEl.prepend(summary);
+  Plotly.newPlot('chart-cum', c2.data, c2.layout, { responsive: true, displaylogo: false });
+  Plotly.newPlot('chart-bar', b2.data, b2.layout, { responsive: true, displaylogo: false });
+  Plotly.newPlot('chart-dd', d1.data, d1.layout, { responsive: true, displaylogo: false });
 </script>
 </body>
 </html>

@@ -27,16 +27,26 @@
 
   <main class="main-content">
     <h1 class="page-title">📈 交易績效追蹤與多策略分析系統</h1>
-    <p class="page-subtitle">輸入你的歷史交易明細，自動產出精準時間加權的累計權益曲線與核心風險指標。</p>
+    <p class="page-subtitle">以「期」（每月一筆）為單位計算報酬與風險，多策略資金加權合併。</p>
 
-    <div class="section-title">📊 策略績效儀表板</div>
-    <div id="metric-cards" class="metric-grid"></div>
+    <div class="section-title">📊 總結</div>
+    <div id="summary-cards" class="metric-grid"></div>
+    <div id="detail-cards" class="metric-grid metric-grid-detail"></div>
+    <p id="capital-notice" class="notice" hidden></p>
 
-    <div class="section-title">📉 單筆結算報酬率</div>
-    <div class="chart-block"><div id="returns-chart" style="width:100%;"></div></div>
+    <div class="section-title">📈 累積報酬率</div>
+    <div class="chart-block"><div id="cum-return-chart" style="width:100%;"></div></div>
 
-    <div class="section-title">📈 累積絕對損益金額</div>
-    <div class="chart-block"><div id="cum-pnl-chart" style="width:100%;"></div></div>
+    <div class="section-title">📉 每期報酬率</div>
+    <div class="chart-block"><div id="period-returns-chart" style="width:100%;"></div></div>
+
+    <div class="section-title">🌊 回撤</div>
+    <div class="chart-block"><div id="drawdown-chart" style="width:100%;"></div></div>
+
+    <div id="strategy-section" hidden>
+      <div class="section-title">🏁 策略比較</div>
+      <div id="strategy-table"></div>
+    </div>
 
     <div class="section-title">📋 交易明細紀錄</div>
     <div id="trade-table"></div>

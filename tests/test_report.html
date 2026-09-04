@@ -1,63 +1,26 @@
 <!doctype html>
 <html lang="zh-Hant">
-<head><meta charset="utf-8"><title>報告匯出測試</title></head>
-<body>
-<h1>HTML 報告產生測試</h1>
+<head><meta charset="utf-8"><title>報告產生測試</title></head>
+<body style="padding:20px;">
+<h1>報告產生測試</h1>
 <div id="results"></div>
-<button id="btn-download">下載測試報告（請下載後雙擊確認離線也能顯示圖表與表格）</button>
-
+<button id="open">在新分頁開啟報告</button>
+<script src="../lib/plotly-source.js"></script>
 <script src="../js/config.js"></script>
 <script src="../js/utils.js"></script>
 <script src="../js/timeSeries.js"></script>
 <script src="../js/metrics.js"></script>
-<script src="../lib/plotly.min.js"></script>
 <script src="../js/charts.js"></script>
 <script src="../js/dashboard.js"></script>
-<script src="../lib/plotly-source.js"></script>
 <script src="../js/report.js"></script>
+<script src="../js/app.js"></script>
+<script src="harness.js"></script>
+<script src="report.test.js"></script>
 <script>
-const fixtureTrades = [
-  { trade_id: 'T001', strategy_name: 'StratA', version: 'v1.0', buy_date: '2026-01-12', sell_date: '2026-01-20', net_return_pct: 6.0, net_profit_loss: 60000.0 },
-  { trade_id: 'T002', strategy_name: 'StratA', version: 'v1.0', buy_date: '2026-02-11', sell_date: '2026-03-10', net_return_pct: -2.0, net_profit_loss: -20000.0 },
-  { trade_id: 'T003', strategy_name: 'StratA', version: 'v1.0', buy_date: '2026-03-11', sell_date: '2026-03-25', net_return_pct: 3.0, net_profit_loss: 30000.0 }
-];
-const equity = TPT.timeSeries.generateTradeEquityCurve(fixtureTrades);
-const metrics = TPT.metrics.calculateMetrics(fixtureTrades, equity);
-const returnsFig = TPT.charts.buildReturnsChart(fixtureTrades);
-const cumFig = TPT.charts.buildCumPnlChart(fixtureTrades);
-
-const html = TPT.report.buildReportHtml('StratA', metrics, fixtureTrades, returnsFig, cumFig);
-
-const results = [];
-function record(name, pass) { results.push({ name, pass }); }
-record('報告含標題', html.includes('StratA · 策略績效報告'));
-record('報告含 8 張指標卡', (html.match(/metric-card/g) || []).length >= 8);
-record('報告含 3 列交易明細', (html.match(/<tr>/g) || []).length >= 3);
-record('報告內嵌 Plotly 圖表初始化呼叫', html.includes("Plotly.newPlot('report-chart-1'") && html.includes("Plotly.newPlot('report-chart-2'"));
-record('報告內嵌 Plotly.js 原始碼（離線可用，檔案應該很大）', html.length > 500000);
-
-const resultsEl = document.getElementById('results');
-let allPass = true;
-results.forEach(r => {
-  if (!r.pass) allPass = false;
-  const line = document.createElement('div');
-  line.style.color = r.pass ? 'green' : 'red';
-  line.textContent = `[${r.pass ? 'PASS' : 'FAIL'}] ${r.name}`;
-  resultsEl.appendChild(line);
-});
-const summary = document.createElement('h2');
-summary.textContent = allPass ? '全部通過 ✅' : '有測試失敗 ❌';
-summary.style.color = allPass ? 'green' : 'red';
-resultsEl.prepend(summary);
-
-document.getElementById('btn-download').addEventListener('click', () => {
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'test_report.html';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-});
+  document.getElementById('open').addEventListener('click', () => {
+    const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    window.open(url, '_blank');
+  });
 </script>
 </body>
 </html>

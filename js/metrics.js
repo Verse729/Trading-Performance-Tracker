@@ -1,65 +1,63 @@
 window.TPT = window.TPT || {};
 
 TPT.metrics = (function () {
-  function calculateMetrics(trades, equityCurve) {
+  function mean(xs) { return xs.reduce((a, b) => a + b, 0) / xs.length; }
+
+  function sampleStd(xs) {
+    const m = mean(xs);
+    return Math.sqrt(xs.reduce((s, x) => s + (x - m) * (x - m), 0) / (xs.length - 1));
+  }
+
+  function calculateMetrics(series) {
+    const points = (series && series.points) || [];
+    const n = points.length;
     const result = {
-      total_trades: 0,
-      total_pnl: 0.0,
-      avg_monthly_return: 0.0,
-      avg_trade_return: 0.0,
-      max_drawdown: 0.0,
-      worst_single_trade_return: 0.0,
-      sharpe_ratio: 0.0,
-      calmar_ratio: 0.0
+      n, first_period: null, last_period: null, unfilled_count: (series && series.unfilledCount) || 0,
+      total_pnl: 0, cum_return: null, annual_return: null, max_drawdown: null,
+      win_rate: null, profit_factor: null, avg_return: null, expectancy: null,
+      sharpe: null, max_consecutive_losses: 0, max_drawdown_amount: null, best_return: null, worst_return: null
     };
+    if (n === 0) return result;
 
-    if (!trades || trades.length === 0 || !equityCurve || equityCurve.length === 0) {
-      return result;
-    }
+    const rs = points.map(p => p.r);
+    const last = points[n - 1];
+    result.first_period = points[0].period;
+    result.last_period = last.period;
+    result.total_pnl = last.cumPnl;
+    result.cum_return = last.cumReturn;
+    if (n >= 2) result.annual_return = Math.pow(1 + last.cumReturn, 12 / n) - 1;
+    result.max_drawdown = Math.min(...points.map(p => p.drawdown));
 
-    result.total_trades = trades.length;
-    result.total_pnl = trades.reduce((sum, t) => sum + t.net_profit_loss, 0);
+    const wins = rs.filter(r => r > 0), losses = rs.filter(r => r < 0);
+    const avgWin = wins.length ? mean(wins) : 0;
+    const avgLoss = losses.length ? mean(losses) : 0;
+    result.win_rate = wins.length / n;
+    result.profit_factor = losses.length ? avgWin / Math.abs(avgLoss) : null;
+    result.avg_return = mean(rs);
+    result.expectancy = result.win_rate * avgWin + (1 - result.win_rate) * avgLoss;
 
-    const returns = equityCurve.map(e => e.return_pct);
-    result.avg_trade_return = returns.reduce((a, b) => a + b, 0) / returns.length;
-
-    const minTradeReturn = Math.min(...trades.map(t => t.net_return_pct));
-    result.worst_single_trade_return = minTradeReturn < 0 ? minTradeReturn / 100.0 : 0.0;
-
-    const buyTimes = trades.map(t => new Date(t.buy_date).getTime());
-    const sellTimes = trades.map(t => new Date(t.sell_date).getTime());
-    const totalDays = Math.max(Math.round((Math.max(...sellTimes) - Math.min(...buyTimes)) / 86400000), 1);
-
-    const finalNav = equityCurve[equityCurve.length - 1].nav;
-    const totalReturn = finalNav / TPT.config.INITIAL_CAPITAL - 1.0;
-    const annualReturn = Math.pow(1.0 + totalReturn, 365.25 / totalDays) - 1.0;
-
-    result.avg_monthly_return = Math.pow(1.0 + annualReturn, 1.0 / 12.0) - 1.0;
-
-    let runningMax = -Infinity;
-    let maxDrawdown = 0.0;
-    for (const point of equityCurve) {
-      runningMax = Math.max(runningMax, point.nav);
-      const drawdown = (point.nav - runningMax) / runningMax;
-      if (drawdown < maxDrawdown) maxDrawdown = drawdown;
-    }
-    result.max_drawdown = maxDrawdown;
-
-    if (returns.length > 1) {
-      const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
-      const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / (returns.length - 1);
-      const stdDev = Math.sqrt(variance);
-      const periodsPerYear = returns.length / (totalDays / 365.25);
-      const annualVol = stdDev * Math.sqrt(periodsPerYear);
-      if (annualVol > 0.0001) {
-        result.sharpe_ratio = (annualReturn - TPT.config.RISK_FREE_RATE) / annualVol;
+    if (n >= 2) {
+      const std = sampleStd(rs);
+      if (std > 0) {
+        const rfPeriod = TPT.config.RISK_FREE_RATE / 12;
+        result.sharpe = mean(rs.map(r => r - rfPeriod)) / std * Math.sqrt(12);
       }
     }
 
-    if (Math.abs(result.max_drawdown) > 0) {
-      result.calmar_ratio = annualReturn / Math.abs(result.max_drawdown);
-    }
+    let streak = 0;
+    rs.forEach(r => {
+      streak = r < 0 ? streak + 1 : 0;
+      if (streak > result.max_consecutive_losses) result.max_consecutive_losses = streak;
+    });
 
+    let peakPnl = 0, mddAmount = 0;
+    points.forEach(p => {
+      peakPnl = Math.max(peakPnl, p.cumPnl);
+      mddAmount = Math.max(mddAmount, peakPnl - p.cumPnl);
+    });
+    result.max_drawdown_amount = mddAmount;
+    result.best_return = Math.max(...rs);
+    result.worst_return = Math.min(...rs);
     return result;
   }
 

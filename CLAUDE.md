@@ -13,19 +13,19 @@ A pure client-side (no server, no Python) trading performance tracker. Double-cl
 
 ## Running Tests
 
-There is no formal test framework — tests are standalone HTML pages you open directly in a browser and read PASS/FAIL from the page (see `tests/`).
+There is no formal test framework — tests are standalone HTML pages you open directly in a browser and read PASS/FAIL from the page (see `tests/`); the same `tests/*.test.js` files also run headless with `node tests/<name>.test.js`.
 
 ## Architecture
 
 ### Key Design Decisions
 
-**Equity curve model** (`js/timeSeries.js`): Each period only has one non-overlapping trade (entries follow a monthly cycle rule), so trades are simply sorted by `buy_date` and chained compounding is applied directly: `nav[i] = INITIAL_CAPITAL * Π(1 + return_pct[j])` for all trades up to and including `i`.
+**Period model** (`js/timeSeries.js`): The unit of analysis is a period = calendar month of `buy_date` (`YYYY-MM`), one trade per strategy per period; no day counts anywhere. A period's return is `net_return_pct` when it has one trade, otherwise capital-weighted `Σ pnl / Σ capital` across the strategies trading that month. `capital` may be missing on legacy rows and is then derived as `|pnl / return|`; rows with 0% return and no capital are flagged and excluded from the weighting.
 
-**Max Drawdown** (`js/metrics.js`): True peak-to-trough drawdown of the equity curve (`nav` running-max based), not a single-trade return. `worst_single_trade_return` is kept as a separate auxiliary metric equal to the worst single `net_return_pct`.
+**Two cumulative curves**: cumulative P&L (plain sum, "how much did I make") and cumulative return (chain-linked `Π(1+r) − 1`, time-weighted, "how good is the strategy regardless of capital"). Annualisation assumes 12 periods per year: `(1+cum)^(12/n) − 1`.
 
-**Monthly return estimation**: CAGR (based on actual elapsed calendar days between the earliest `buy_date` and latest `sell_date`) compounded back down to a monthly figure — not a naive daily-average × 30 approximation.
+**Drawdown** (`js/metrics.js`): peak-to-trough on the chain-linked growth curve with the peak seeded at 1.0, so a first-period loss registers. `max_drawdown_amount` is the same idea on the cumulative P&L curve.
 
-**Strategy isolation**: Filtering happens in `js/app.js` before both `timeSeries`/`metrics` calls, so metrics and charts always reflect only the selected strategy's trades.
+**Strategy isolation**: `app.js` builds one period series for the selected strategy (or the capital-weighted combined series for 全部), and in the 全部 view also one per strategy so charts can overlay them and the comparison table can rank them.
 
 **No build step**: All JS files are loaded as classic (non-module) `<script>` tags attaching to a single `window.TPT` namespace, specifically so the app works when opened directly via `file://` (ES modules and `fetch()` of local files are blocked under `file://` in Chromium).
 
