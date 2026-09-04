@@ -27,9 +27,9 @@ TPT.dashboard = (function () {
   ];
   const DETAIL_DEFS = [
     ['勝率', m => m.win_rate === null ? '—' : `${(m.win_rate * 100).toFixed(2)}%`, () => null],
-    ['盈虧比', m => fmtRatio(m.profit_factor), () => null],
+    ['盈虧比', m => fmtRatio(m.payoff_ratio), () => null],
     ['平均期報酬', m => fmtPct(m.avg_return), m => m.avg_return],
-    ['期望值', m => fmtPct(m.expectancy), m => m.expectancy],
+    ['獲利因子', m => fmtRatio(m.profit_factor), m => m.profit_factor === null ? null : m.profit_factor - 1],
     ['Sharpe', m => fmtRatio(m.sharpe), m => m.sharpe],
     ['最大連續虧損', m => `${m.max_consecutive_losses} 期`, m => m.max_consecutive_losses > 0 ? -1 : 0],
     ['最大回撤金額', m => m.max_drawdown_amount === null ? '—' : `${fmtInt(m.max_drawdown_amount)} 元`, m => m.max_drawdown_amount > 0 ? -1 : 0],
