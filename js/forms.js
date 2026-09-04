@@ -20,6 +20,16 @@ TPT.forms = (function () {
     return { valid: true };
   }
 
+  // 填好投入資金與損益後自動帶出報酬率；欄位仍可手改。
+  function autoReturnPct(form) {
+    const calc = () => {
+      const cap = parseFloat(form.capital.value), pnl = parseFloat(form.net_profit_loss.value);
+      if (cap > 0 && !isNaN(pnl)) form.net_return_pct.value = (pnl / cap * 100).toFixed(2);
+    };
+    form.capital.addEventListener('input', calc);
+    form.net_profit_loss.addEventListener('input', calc);
+  }
+
   function showAlert(container, type, message) {
     container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
     setTimeout(() => { container.innerHTML = ''; }, 4000);
@@ -69,6 +79,7 @@ TPT.forms = (function () {
 
     const addForm = container.querySelector('#add-form');
     const addAlert = container.querySelector('#add-alert');
+    autoReturnPct(addForm);
     addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(addForm);
@@ -126,6 +137,7 @@ TPT.forms = (function () {
 
     const select = body.querySelector('#update-select');
     const form = body.querySelector('#update-form');
+    autoReturnPct(form);
 
     function fillForm(tradeId) {
       const t = trades.find(x => x.trade_id === tradeId);
