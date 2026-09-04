@@ -55,11 +55,12 @@ TPT.charts = (function () {
   function buildCumReturnChart(seriesList) {
     if (!hasData(seriesList)) return EMPTY;
     const data = [];
+    // ponytail: hovertemplate 不可用 '+' 旗標，Plotly 2.35 會略過格式化直接印原始浮點數
     seriesList.forEach((s, i) => {
       const x = s.points.map(p => p.period);
       const line = { color: seriesColor(s, i, seriesList.length), width: s.emphasis ? 3 : 2 };
-      data.push({ x, y: s.points.map(p => p.cumReturn * 100), mode: 'lines+markers', name: s.name, line, visible: true, hovertemplate: '%{y:+.2f}%<extra>' + s.name + '</extra>' });
-      data.push({ x, y: s.points.map(p => p.cumPnl), mode: 'lines+markers', name: s.name, line, visible: false, hovertemplate: '%{y:+,.0f} 元<extra>' + s.name + '</extra>' });
+      data.push({ x, y: s.points.map(p => p.cumReturn * 100), mode: 'lines+markers', name: s.name, line, visible: true, hovertemplate: '%{y:.2f}%<extra>' + s.name + '</extra>' });
+      data.push({ x, y: s.points.map(p => p.cumPnl), mode: 'lines+markers', name: s.name, line, visible: false, hovertemplate: '%{y:,.2f} 元<extra>' + s.name + '</extra>' });
     });
     const retVisible = data.map((_, i) => i % 2 === 0);
     const pnlVisible = retVisible.map(v => !v);
@@ -80,7 +81,7 @@ TPT.charts = (function () {
     const data = seriesList.map((s, i) => {
       const y = s.points.map(p => p.r * 100);
       const color = seriesList.length === 1 ? y.map(v => v >= 0 ? T.GOOD : T.CRITICAL) : seriesColor(s, i, seriesList.length);
-      return { type: 'bar', x: s.points.map(p => p.period), y, name: s.name, marker: { color }, hovertemplate: '%{y:+.2f}%<extra>' + s.name + '</extra>' };
+      return { type: 'bar', x: s.points.map(p => p.period), y, name: s.name, marker: { color }, hovertemplate: '%{y:.2f}%<extra>' + s.name + '</extra>' };
     });
     const layout = baseLayout(350, '每期報酬率 (%)', sortedPeriods(seriesList));
     layout.barmode = 'group';
