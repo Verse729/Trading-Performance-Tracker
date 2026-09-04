@@ -63,9 +63,9 @@ assertClose('mA cum_return', mA.cum_return, 0.069964);
 assertClose('mA annual_return', mA.annual_return, 0.310619613, 1e-9);
 assertClose('mA max_drawdown', mA.max_drawdown, -0.02);
 assertClose('mA win_rate', mA.win_rate, 2 / 3);
-assertClose('mA profit_factor', mA.profit_factor, 2.25);
+assertClose('mA payoff_ratio', mA.payoff_ratio, 2.25);
+assertClose('mA profit_factor', mA.profit_factor, 4.5);
 assertClose('mA avg_return', mA.avg_return, 0.023333333333, 1e-9);
-assertClose('mA expectancy', mA.expectancy, 0.023333333333, 1e-9);
 assertClose('mA sharpe', mA.sharpe, 1.857142857, 1e-9);
 assertEqual('mA max_consecutive_losses', mA.max_consecutive_losses, 1);
 assertClose('mA max_drawdown_amount', mA.max_drawdown_amount, 20000);
@@ -76,6 +76,7 @@ assertClose('mA worst_return', mA.worst_return, -0.02);
 const mB = TPT.metrics.calculateMetrics(sB);
 assertEqual('mB unfilled_count', mB.unfilled_count, 1);
 assertClose('mB annual_return', mB.annual_return, 0.09948994, 1e-8);
+assertClose('mB payoff_ratio', mB.payoff_ratio, 1.833333333, 1e-9);
 assertClose('mB profit_factor', mB.profit_factor, 1.833333333, 1e-9);
 assertClose('mB sharpe', mB.sharpe, 0.576350528, 1e-9);
 
@@ -86,6 +87,7 @@ const sC = TPT.timeSeries.buildPeriodSeries([
 const mC = TPT.metrics.calculateMetrics(sC);
 assertEqual('mC annual_return null', mC.annual_return, null);
 assertEqual('mC sharpe null', mC.sharpe, null);
+assertEqual('mC payoff_ratio null (no losses)', mC.payoff_ratio, null);
 assertEqual('mC profit_factor null (no losses)', mC.profit_factor, null);
 assertClose('mC win_rate', mC.win_rate, 1);
 assertEqual('mC max_consecutive_losses', mC.max_consecutive_losses, 0);

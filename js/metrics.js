@@ -1,7 +1,8 @@
 window.TPT = window.TPT || {};
 
 TPT.metrics = (function () {
-  function mean(xs) { return xs.reduce((a, b) => a + b, 0) / xs.length; }
+  function sum(xs) { return xs.reduce((a, b) => a + b, 0); }
+  function mean(xs) { return sum(xs) / xs.length; }
 
   function sampleStd(xs) {
     const m = mean(xs);
@@ -14,7 +15,7 @@ TPT.metrics = (function () {
     const result = {
       n, first_period: null, last_period: null, unfilled_count: (series && series.unfilledCount) || 0,
       total_pnl: 0, cum_return: null, annual_return: null, max_drawdown: null,
-      win_rate: null, profit_factor: null, avg_return: null, expectancy: null,
+      win_rate: null, payoff_ratio: null, profit_factor: null, avg_return: null,
       sharpe: null, max_consecutive_losses: 0, max_drawdown_amount: null, best_return: null, worst_return: null
     };
     if (n === 0) return result;
@@ -32,9 +33,9 @@ TPT.metrics = (function () {
     const avgWin = wins.length ? mean(wins) : 0;
     const avgLoss = losses.length ? mean(losses) : 0;
     result.win_rate = wins.length / n;
-    result.profit_factor = losses.length ? avgWin / Math.abs(avgLoss) : null;
+    result.payoff_ratio = losses.length ? avgWin / Math.abs(avgLoss) : null;
+    result.profit_factor = losses.length ? sum(wins) / Math.abs(sum(losses)) : null;
     result.avg_return = mean(rs);
-    result.expectancy = result.win_rate * avgWin + (1 - result.win_rate) * avgLoss;
 
     if (n >= 2) {
       const std = sampleStd(rs);
