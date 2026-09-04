@@ -20,6 +20,16 @@ TPT.forms = (function () {
     return { valid: true };
   }
 
+  // 填好投入資金與損益後自動帶出報酬率；欄位仍可手改。
+  function autoReturnPct(form) {
+    const calc = () => {
+      const cap = parseFloat(form.capital.value), pnl = parseFloat(form.net_profit_loss.value);
+      if (cap > 0 && !isNaN(pnl)) form.net_return_pct.value = (pnl / cap * 100).toFixed(2);
+    };
+    form.capital.addEventListener('input', calc);
+    form.net_profit_loss.addEventListener('input', calc);
+  }
+
   function showAlert(container, type, message) {
     container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
     setTimeout(() => { container.innerHTML = ''; }, 4000);
@@ -41,9 +51,9 @@ TPT.forms = (function () {
             <div class="form-field"><label>版本編號</label><input type="text" name="version" placeholder="例如: v1.0"></div>
             <div class="form-field"><label>買進日期</label><input type="date" name="buy_date" required></div>
             <div class="form-field"><label>賣出日期</label><input type="date" name="sell_date" required></div>
-            <div class="form-field"><label>投入資金 (元)</label><input type="number" step="1000" min="1" name="capital" placeholder="例如: 1000000" required></div>
+            <div class="form-field"><label>投入資金 (元)</label><input type="number" step="any" min="1" name="capital" placeholder="例如: 1000000" required></div>
             <div class="form-field"><label>結算報酬率 (%)</label><input type="number" step="0.01" name="net_return_pct" value="0"></div>
-            <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="100" name="net_profit_loss" value="0"></div>
+            <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="any" name="net_profit_loss" value="0"></div>
           </div>
           <button type="submit" class="btn btn-primary">確認新增</button>
         </form>
@@ -69,6 +79,7 @@ TPT.forms = (function () {
 
     const addForm = container.querySelector('#add-form');
     const addAlert = container.querySelector('#add-alert');
+    autoReturnPct(addForm);
     addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(addForm);
@@ -117,15 +128,16 @@ TPT.forms = (function () {
           <div class="form-field"><label>版本編號</label><input type="text" name="version"></div>
           <div class="form-field"><label>買進日期</label><input type="date" name="buy_date" required></div>
           <div class="form-field"><label>賣出日期</label><input type="date" name="sell_date" required></div>
-          <div class="form-field"><label>投入資金 (元)</label><input type="number" step="1000" min="1" name="capital" required></div>
+          <div class="form-field"><label>投入資金 (元)</label><input type="number" step="any" min="1" name="capital" required></div>
           <div class="form-field"><label>結算報酬率 (%)</label><input type="number" step="0.01" name="net_return_pct"></div>
-          <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="100" name="net_profit_loss"></div>
+          <div class="form-field"><label>絕對損益金額 (元)</label><input type="number" step="any" name="net_profit_loss"></div>
         </div>
         <button type="submit" class="btn btn-primary">確認修改</button>
       </form>`;
 
     const select = body.querySelector('#update-select');
     const form = body.querySelector('#update-form');
+    autoReturnPct(form);
 
     function fillForm(tradeId) {
       const t = trades.find(x => x.trade_id === tradeId);
