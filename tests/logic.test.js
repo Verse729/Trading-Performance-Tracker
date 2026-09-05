@@ -104,4 +104,14 @@ assertEqual('mE n', mE.n, 0);
 assertEqual('mE total_pnl', mE.total_pnl, 0);
 assertEqual('mE cum_return null', mE.cum_return, null);
 
+// 資金佔用：本金每期回收再投入，看的是單期同時佔用的峰值，不是累加
+const capTrades = [
+  { trade_id: 'K1', strategy_name: 'S1', version: 'v1', buy_date: '2026-06-01', sell_date: '2026-06-20', net_return_pct: 2, net_profit_loss: 4000, capital: 200000 },
+  { trade_id: 'K2', strategy_name: 'S1', version: 'v1', buy_date: '2026-07-01', sell_date: '2026-07-20', net_return_pct: 2, net_profit_loss: 7000, capital: 350000 },
+  { trade_id: 'K3', strategy_name: 'S2', version: 'v1', buy_date: '2026-07-02', sell_date: '2026-07-22', net_return_pct: 1, net_profit_loss: 2000, capital: 200000 }
+];
+const capM = TPT.metrics.calculateMetrics(TPT.timeSeries.buildPeriodSeries(capTrades));
+assertClose('peak_capital 是單期同時佔用的最大值', capM.peak_capital, 550000);
+assertClose('avg_capital 是各期投入平均', capM.avg_capital, (200000 + 550000) / 2);
+
 reportResults();
