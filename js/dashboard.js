@@ -33,7 +33,9 @@ TPT.dashboard = (function () {
     ['Sharpe', m => fmtRatio(m.sharpe), m => m.sharpe],
     ['最大連續虧損', m => `${m.max_consecutive_losses} 期`, m => m.max_consecutive_losses > 0 ? -1 : 0],
     ['最大回撤金額', m => m.max_drawdown_amount === null ? '—' : `${fmtInt(m.max_drawdown_amount)} 元`, m => m.max_drawdown_amount > 0 ? -1 : 0],
-    ['最佳 / 最差單期', m => `${fmtPct(m.best_return)} / ${fmtPct(m.worst_return)}`, () => null]
+    ['最佳 / 最差單期', m => `${fmtPct(m.best_return)} / ${fmtPct(m.worst_return)}`, () => null],
+    ['最大單期投入', m => m.peak_capital === null ? '—' : `${fmtInt(m.peak_capital)} 元`, () => null],
+    ['平均單期投入', m => m.avg_capital === null ? '—' : `${fmtInt(m.avg_capital)} 元`, () => null]
   ];
 
   function card(label, value, color, extraClass, sub) {

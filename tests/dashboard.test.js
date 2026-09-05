@@ -22,7 +22,8 @@ assertEqual('summary has sub line', summary.includes('3 期，2026-01 至 2026-0
 assertEqual('summary shows total pnl', summary.includes('+40,000'), true);
 
 const detail = D.buildDetailCardsHtml(metrics);
-assertEqual('detail card count', (detail.match(/metric-card-small/g) || []).length, 8);
+assertEqual('detail card count', (detail.match(/metric-card-small/g) || []).length, 10);
+assertEqual('detail shows peak capital', detail.includes('最大單期投入'), true);
 assertEqual('detail shows win rate', detail.includes('33.33%'), true);
 assertEqual('detail shows streak', detail.includes('1 期'), true);
 

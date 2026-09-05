@@ -16,7 +16,8 @@ TPT.metrics = (function () {
       n, first_period: null, last_period: null, unfilled_count: (series && series.unfilledCount) || 0,
       total_pnl: 0, cum_return: null, annual_return: null, max_drawdown: null,
       win_rate: null, payoff_ratio: null, profit_factor: null, avg_return: null,
-      sharpe: null, max_consecutive_losses: 0, max_drawdown_amount: null, best_return: null, worst_return: null
+      sharpe: null, max_consecutive_losses: 0, max_drawdown_amount: null, best_return: null, worst_return: null,
+      peak_capital: null, avg_capital: null
     };
     if (n === 0) return result;
 
@@ -59,6 +60,13 @@ TPT.metrics = (function () {
     result.max_drawdown_amount = mddAmount;
     result.best_return = Math.max(...rs);
     result.worst_return = Math.min(...rs);
+
+    // 資金佔用：本金每期回收再投入，累加沒有意義，只看單期同時佔用多少
+    const caps = points.map(p => p.capital).filter(c => c > 0);
+    if (caps.length) {
+      result.peak_capital = Math.max(...caps);
+      result.avg_capital = mean(caps);
+    }
     return result;
   }
 
