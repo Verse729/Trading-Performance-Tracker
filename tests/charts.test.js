@@ -29,14 +29,18 @@ assertEqual('cum series color', c2.data[0].line.color, TPT.chartTokens.SERIES[0]
 
 // 每期報酬柱狀
 const b1 = TPT.charts.buildPeriodReturnsChart([{ name: 'A', points: pA }]);
-assertEqual('bar single trace count', b1.data.length, 1);
+assertEqual('bar single trace count', b1.data.length, 2);
 assertEqual('bar type', b1.data[0].type, 'bar');
+assertEqual('bar return trace visible', b1.data[0].visible, true);
+assertEqual('bar pnl trace hidden', b1.data[1].visible, false);
 assertEqual('bar single colors by sign', b1.data[0].marker.color.join(','), [TPT.chartTokens.GOOD, TPT.chartTokens.CRITICAL].join(','));
 assertClose('bar y[0] pct', b1.data[0].y[0], 6);
+assertClose('bar pnl y[0]', b1.data[1].y[0], 60000);
+assertEqual('bar has toggle', b1.layout.updatemenus[0].buttons.length, 2);
 const b2 = TPT.charts.buildPeriodReturnsChart([{ name: 'A', points: pA }, { name: 'B', points: pB }]);
-assertEqual('bar multi trace count', b2.data.length, 2);
+assertEqual('bar multi trace count', b2.data.length, 4);
 assertEqual('bar grouped', b2.layout.barmode, 'group');
-assertEqual('bar multi color', b2.data[1].marker.color, TPT.chartTokens.SERIES[1]);
+assertEqual('bar multi color', b2.data[2].marker.color, TPT.chartTokens.SERIES[1]);
 
 // 回撤曲線
 const d1 = TPT.charts.buildDrawdownChart(pA);
