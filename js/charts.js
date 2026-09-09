@@ -78,14 +78,29 @@ TPT.charts = (function () {
 
   function buildPeriodReturnsChart(seriesList) {
     if (!hasData(seriesList)) return EMPTY;
-    const data = seriesList.map((s, i) => {
-      const y = s.points.map(p => p.r * 100);
-      const color = seriesList.length === 1 ? y.map(v => v >= 0 ? T.GOOD : T.CRITICAL) : seriesColor(s, i, seriesList.length);
-      return { type: 'bar', x: s.points.map(p => p.period), y, name: s.name, marker: { color }, hovertemplate: '%{y:.2f}%<extra>' + s.name + '</extra>' };
+    const data = [];
+    seriesList.forEach((s, i) => {
+      const x = s.points.map(p => p.period);
+      const bar = (y, tpl, visible) => ({
+        type: 'bar', x, y, name: s.name, visible,
+        marker: { color: seriesList.length === 1 ? y.map(v => v >= 0 ? T.GOOD : T.CRITICAL) : seriesColor(s, i, seriesList.length) },
+        hovertemplate: tpl + '<extra>' + s.name + '</extra>'
+      });
+      data.push(bar(s.points.map(p => p.r * 100), '%{y:.2f}%', true));
+      data.push(bar(s.points.map(p => p.pnl), '%{y:,.2f} 元', false));
     });
+    const retVisible = data.map((_, i) => i % 2 === 0);
+    const pnlVisible = retVisible.map(v => !v);
     const layout = baseLayout(350, '每期報酬率 (%)', sortedPeriods(seriesList));
     layout.barmode = 'group';
     layout.showlegend = seriesList.length > 1;
+    layout.updatemenus = [{
+      type: 'buttons', direction: 'right', x: 0, xanchor: 'left', y: 1.18, yanchor: 'top', showactive: true,
+      buttons: [
+        { label: '每期報酬率', method: 'update', args: [{ visible: retVisible }, { 'yaxis.title': '每期報酬率 (%)' }] },
+        { label: '每期損益金額', method: 'update', args: [{ visible: pnlVisible }, { 'yaxis.title': '每期損益金額 (元)' }] }
+      ]
+    }];
     return { data, layout };
   }
 

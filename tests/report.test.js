@@ -12,7 +12,7 @@ assertEqual('view all filtered count', all.filtered.length, 3);
 assertEqual('view all strategyRows', all.strategyRows.length, 2);
 assertEqual('view all metrics n', all.metrics.n, 2);
 assertEqual('view all cum chart traces (2 strategies + combined) x2', all.figs.cumReturn.data.length, 6);
-assertEqual('view all bar traces', all.figs.periodReturns.data.length, 2);
+assertEqual('view all bar traces x2', all.figs.periodReturns.data.length, 4);
 
 const one = TPT.app.buildView(trades, 'StratB');
 assertEqual('view one filtered count', one.filtered.length, 1);
