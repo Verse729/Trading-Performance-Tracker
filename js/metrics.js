@@ -17,6 +17,7 @@ TPT.metrics = (function () {
       total_pnl: 0, cum_return: null, annual_return: null, max_drawdown: null,
       win_rate: null, payoff_ratio: null, profit_factor: null, avg_return: null,
       sharpe: null, max_consecutive_losses: 0, max_drawdown_amount: null, best_return: null, worst_return: null,
+      last_pnl: null, last_return: null,
       peak_capital: null, avg_capital: null
     };
     if (n === 0) return result;
@@ -26,6 +27,8 @@ TPT.metrics = (function () {
     result.first_period = points[0].period;
     result.last_period = last.period;
     result.total_pnl = last.cumPnl;
+    result.last_pnl = last.pnl;
+    result.last_return = last.r;
     result.cum_return = last.cumReturn;
     if (n >= 2) result.annual_return = Math.pow(1 + last.cumReturn, 12 / n) - 1;
     result.max_drawdown = Math.min(...points.map(p => p.drawdown));

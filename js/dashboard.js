@@ -18,7 +18,7 @@ TPT.dashboard = (function () {
     return v > 0 ? T.GOOD : T.CRITICAL;
   }
 
-  // [label, 顯示值, 決定顏色的數值]
+  // [label, 顯示值, 決定顏色的數值, 副標(選填)]
   const SUMMARY_DEFS = [
     ['總損益', m => `${formatSignedInt(m.total_pnl)} 元`, m => m.total_pnl],
     ['累積報酬率', m => fmtPct(m.cum_return), m => m.cum_return],
@@ -26,6 +26,8 @@ TPT.dashboard = (function () {
     ['最大回撤', m => fmtPct(m.max_drawdown), m => m.max_drawdown]
   ];
   const DETAIL_DEFS = [
+    ['最新一期損益', m => m.last_pnl === null ? '—' : `${formatSignedInt(m.last_pnl)} 元`, m => m.last_pnl,
+      m => m.last_period ? `${esc(m.last_period)} · ${fmtPct(m.last_return)}` : ''],
     ['勝率', m => m.win_rate === null ? '—' : `${(m.win_rate * 100).toFixed(2)}%`, () => null],
     ['盈虧比', m => fmtRatio(m.payoff_ratio), () => null],
     ['平均期報酬', m => fmtPct(m.avg_return), m => m.avg_return],
@@ -50,7 +52,7 @@ TPT.dashboard = (function () {
   }
 
   function buildDetailCardsHtml(m) {
-    return DETAIL_DEFS.map(([label, fmt, tone]) => card(label, fmt(m), toneColor(tone(m)), 'metric-card-small')).join('');
+    return DETAIL_DEFS.map(([label, fmt, tone, sub]) => card(label, fmt(m), toneColor(tone(m)), 'metric-card-small', sub && sub(m))).join('');
   }
 
   function buildStrategyTableHtml(rows) {
