@@ -4,8 +4,50 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Workflow Rules
 
-1. **所有改動必須在新建的 branch 上進行**，禁止直接在 `main` 上 commit。
-2. **允許執行 `git merge`**（例如將功能分支合併回 `main`），但**絕對禁止執行 `git push`**，包含任何形式的 force push。
+1. **所有改動必須在新建的 branch 上進行**，禁止直接在 `main` 或 `develop` 上 commit。
+2. **允許執行 `git merge`**（例如將功能分支合併回 `develop`／`main`），但**絕對禁止執行 `git push`**，包含任何形式的 force push。
+3. **合併前一律先問過使用者**：任何 `git merge`（含 feature → `develop`、`develop` → `main`）都必須先說明改了什麼、等使用者明確同意後才執行，不得自行合併。commit 可以直接做，merge 不行。
+
+### 分支模型
+
+| 分支 | 用途 | 從哪開 | 合併回 |
+|---|---|---|---|
+| `main` | 穩定可用版本，隨時可直接開 `index.html` 使用 | — | — |
+| `develop` | 整合中的開發線，功能完成後先進這裡 | `main` | `main` |
+| `feature/<名稱>` | 新功能／改良 | `develop` | `develop` |
+| `fix/<名稱>` | 一般 bug 修復 | `develop` | `develop` |
+| `hotfix/<名稱>` | `main` 上的緊急修復 | `main` | `main` 與 `develop` |
+| `docs/<名稱>`、`chore/<名稱>` | 文件、雜務（不影響行為） | `develop` | `develop` |
+
+命名用小寫英文與 `-` 連接，例如 `feature/period-pnl-toggle`、`fix/drawdown-seed`。
+
+### 標準流程
+
+```bash
+# 1. 開分支
+git checkout develop && git checkout -b feature/xxx
+
+# 2. 開發並小步 commit（訊息格式見下）
+
+# 3. 合併回 develop（--no-ff 保留分支歷史，方便回溯）
+git checkout develop && git merge --no-ff feature/xxx
+git branch -d feature/xxx
+
+# 4. 發版：develop 驗證通過後合併回 main
+git checkout main && git merge --no-ff develop
+git tag -a v1.2.0 -m "..."   # 版本號選用
+```
+
+Hotfix 例外：從 `main` 開，修完後合併回 `main`，再合併一次回 `develop`，避免修復在下次發版被蓋掉。
+
+### Commit 訊息
+
+`<類型>: <中文描述>`，類型用 `Feat` / `Fix` / `Docs` / `Refactor` / `Test` / `Chore`，與既有歷史一致（例如 `Feat: 每期損益金額圖表新增策略總和損益線`）。
+
+### 合併前檢查
+
+- `node tests/<name>.test.js` 全數 PASS。
+- 直接開 `index.html`（`file://`）確認功能正常，不能只靠測試。
 
 ## Project Overview
 
