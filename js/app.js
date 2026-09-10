@@ -78,7 +78,7 @@ TPT.app = (function () {
 
     const figs = {
       cumReturn: TPT.charts.buildCumReturnChart(seriesList),
-      periodReturns: TPT.charts.buildPeriodReturnsChart(seriesList.filter(s => !s.emphasis)),
+      periodReturns: TPT.charts.buildPeriodReturnsChart(seriesList),
       drawdown: TPT.charts.buildDrawdownChart(series.points)
     };
     return { filtered, metrics, strategyRows, figs };

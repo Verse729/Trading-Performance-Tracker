@@ -12,7 +12,11 @@ assertEqual('view all filtered count', all.filtered.length, 3);
 assertEqual('view all strategyRows', all.strategyRows.length, 2);
 assertEqual('view all metrics n', all.metrics.n, 2);
 assertEqual('view all cum chart traces (2 strategies + combined) x2', all.figs.cumReturn.data.length, 6);
-assertEqual('view all bar traces x2', all.figs.periodReturns.data.length, 4);
+assertEqual('view all bar traces x2 + total line', all.figs.periodReturns.data.length, 5);
+const totalLine = all.figs.periodReturns.data[4];
+assertEqual('total line is scatter', totalLine.type, 'scatter');
+assertEqual('total line hidden in return mode', totalLine.visible, false);
+assertEqual('total line shown in pnl mode', all.figs.periodReturns.layout.updatemenus[0].buttons[1].args[0].visible[4], true);
 
 const one = TPT.app.buildView(trades, 'StratB');
 assertEqual('view one filtered count', one.filtered.length, 1);
