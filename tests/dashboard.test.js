@@ -22,7 +22,12 @@ assertEqual('summary has sub line', summary.includes('3 期，2026-01 至 2026-0
 assertEqual('summary shows total pnl', summary.includes('+40,000'), true);
 
 const detail = D.buildDetailCardsHtml(metrics);
-assertEqual('detail card count', (detail.match(/metric-card-small/g) || []).length, 10);
+assertEqual('detail card count', (detail.match(/metric-card-small/g) || []).length, 11);
+assertEqual('detail shows latest period pnl', detail.includes('最新一期損益'), true);
+assertEqual('detail latest pnl value', detail.includes('+0 元'), true);
+assertEqual('detail latest pnl sub', detail.includes('2026-03 · +0.00%'), true);
+assertEqual('detail latest pnl escapes period', D.buildDetailCardsHtml({ ...metrics, last_period: '<b>x' }).includes('&lt;b&gt;x'), true);
+assertEqual('detail latest pnl empty', D.buildDetailCardsHtml(TPT.metrics.calculateMetrics({ points: [], unfilledCount: 0 })).includes('最新一期損益'), true);
 assertEqual('detail shows peak capital', detail.includes('最大單期投入'), true);
 assertEqual('detail shows win rate', detail.includes('33.33%'), true);
 assertEqual('detail shows streak', detail.includes('1 期'), true);
