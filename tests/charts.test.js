@@ -42,6 +42,18 @@ assertEqual('bar multi trace count', b2.data.length, 4);
 assertEqual('bar grouped', b2.layout.barmode, 'group');
 assertEqual('bar multi color', b2.data[2].marker.color, TPT.chartTokens.SERIES[1]);
 
+// 合計損益線：只在「每期損益金額」模式現身，y 為當期各策略損益加總
+const b3 = TPT.charts.buildPeriodReturnsChart([{ name: 'A', points: pA }, { name: 'B', points: pB }, { name: '全部策略', points: pAll, emphasis: true }]);
+assertEqual('bar total line appended', b3.data.length, 5);
+assertEqual('bar total line type', b3.data[4].type, 'scatter');
+assertEqual('bar total line hidden by default', b3.data[4].visible, false);
+assertEqual('bar total line hidden in return mode', b3.layout.updatemenus[0].buttons[0].args[0].visible[4], false);
+assertEqual('bar total line visible in pnl mode', b3.layout.updatemenus[0].buttons[1].args[0].visible[4], true);
+assertClose('bar total line y[0] is sum of strategies', b3.data[4].y[0], pA[0].pnl + pB[0].pnl);
+// 單一策略時柱子本身就是總和，不加線
+const b4 = TPT.charts.buildPeriodReturnsChart([{ name: 'A', points: pA }, { name: '全部策略', points: pA, emphasis: true }]);
+assertEqual('bar no total line for single strategy', b4.data.length, 2);
+
 // 回撤曲線
 const d1 = TPT.charts.buildDrawdownChart(pA);
 assertEqual('dd trace count', d1.data.length, 1);

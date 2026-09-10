@@ -77,13 +77,14 @@ TPT.charts = (function () {
   }
 
   function buildPeriodReturnsChart(seriesList) {
-    if (!hasData(seriesList)) return EMPTY;
+    const bars = seriesList.filter(s => !s.emphasis);
+    if (!hasData(bars)) return EMPTY;
     const data = [];
-    seriesList.forEach((s, i) => {
+    bars.forEach((s, i) => {
       const x = s.points.map(p => p.period);
       const bar = (y, tpl, visible) => ({
         type: 'bar', x, y, name: s.name, visible,
-        marker: { color: seriesList.length === 1 ? y.map(v => v >= 0 ? T.GOOD : T.CRITICAL) : seriesColor(s, i, seriesList.length) },
+        marker: { color: bars.length === 1 ? y.map(v => v >= 0 ? T.GOOD : T.CRITICAL) : seriesColor(s, i, bars.length) },
         hovertemplate: tpl + '<extra>' + s.name + '</extra>'
       });
       data.push(bar(s.points.map(p => p.r * 100), '%{y:.2f}%', true));
@@ -91,9 +92,23 @@ TPT.charts = (function () {
     });
     const retVisible = data.map((_, i) => i % 2 === 0);
     const pnlVisible = retVisible.map(v => !v);
+
+    // 合計損益線：只在「每期損益金額」模式現身；單一策略時柱子本身就是總和，不需要
+    const total = bars.length > 1 ? seriesList.find(s => s.emphasis) : null;
+    if (total && total.points.length > 0) {
+      data.push({
+        type: 'scatter', mode: 'lines+markers', visible: false, name: '總損益',
+        x: total.points.map(p => p.period), y: total.points.map(p => p.pnl),
+        line: { color: T.INK_PRIMARY, width: 3 },
+        hovertemplate: '%{y:,.2f} 元<extra>總損益</extra>'
+      });
+      retVisible.push(false);
+      pnlVisible.push(true);
+    }
+
     const layout = baseLayout(350, '每期報酬率 (%)', sortedPeriods(seriesList));
     layout.barmode = 'group';
-    layout.showlegend = seriesList.length > 1;
+    layout.showlegend = bars.length > 1;
     layout.updatemenus = [{
       type: 'buttons', direction: 'right', x: 0, xanchor: 'left', y: 1.18, yanchor: 'top', showactive: true,
       buttons: [
