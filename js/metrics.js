@@ -38,7 +38,10 @@ TPT.metrics = (function () {
     const avgLoss = losses.length ? mean(losses) : 0;
     result.win_rate = wins.length / n;
     result.payoff_ratio = losses.length ? avgWin / Math.abs(avgLoss) : null;
-    result.profit_factor = losses.length ? sum(wins) / Math.abs(sum(losses)) : null;
+    // 獲利因子用金額（總獲利 ÷ 總虧損），跟總損益同一把尺；用報酬率算只等於 盈虧比 × 勝率 ÷ 敗率
+    const pnls = points.map(p => p.pnl);
+    const lossPnl = sum(pnls.filter(x => x < 0));
+    result.profit_factor = lossPnl < 0 ? sum(pnls.filter(x => x > 0)) / -lossPnl : null;
     result.avg_return = mean(rs);
 
     if (n >= 2) {
