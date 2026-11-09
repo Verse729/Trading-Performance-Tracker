@@ -77,7 +77,7 @@ const mB = TPT.metrics.calculateMetrics(sB);
 assertEqual('mB unfilled_count', mB.unfilled_count, 1);
 assertClose('mB annual_return', mB.annual_return, 0.09948994, 1e-8);
 assertClose('mB payoff_ratio', mB.payoff_ratio, 1.833333333, 1e-9);
-assertClose('mB profit_factor', mB.profit_factor, 1.833333333, 1e-9);
+assertClose('mB profit_factor uses amounts, not returns', mB.profit_factor, 55000 / 20000);
 assertClose('mB sharpe', mB.sharpe, 0.576350528, 1e-9);
 
 // ---- metrics：只有 1 期 ----
