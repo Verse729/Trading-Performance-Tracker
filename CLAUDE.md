@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Workflow Rules
 
 1. **所有改動必須在新建的 branch 上進行**，禁止直接在 `main` 或 `develop` 上 commit。
-2. **允許執行 `git merge`**（例如將功能分支合併回 `develop`／`main`），但**絕對禁止執行 `git push`**，包含任何形式的 force push。
+2. **允許執行 `git merge` 與 `git push`**（例如將功能分支合併回 `develop`／`main`，或把 `main`、`develop` 推上遠端）。
 3. **合併前一律先問過使用者**：任何 `git merge`（含 feature → `develop`、`develop` → `main`）都必須先說明改了什麼、等使用者明確同意後才執行，不得自行合併。commit 可以直接做，merge 不行。
 
 ### 分支模型
