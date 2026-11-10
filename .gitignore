@@ -13,3 +13,6 @@ trades_export.json
 
 # Subagent-driven-development 執行期暫存（進度追蹤、任務簡報）
 .superpowers/
+
+# 從 App 匯出的 JSON 備份（含真實交易資料，不進版控）
+data/
